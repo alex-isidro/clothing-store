@@ -1,4 +1,4 @@
-namespace clothing_store.API;
+namespace ClothingStore.API;
 
 public class WeatherForecast
 {
