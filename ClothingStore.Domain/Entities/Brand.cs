@@ -1,13 +1,9 @@
-﻿namespace ClothingStore.Domain.Entities;
+﻿using ClothingStore.Domain.Common;
 
-public class Brand
+namespace ClothingStore.Domain.Entities;
+
+public class Brand : BaseEntity
 {
-    public Guid Id { get; private set; }
     public string Name { get; set; }
     public string Description { get; set; }
-
-    public Brand()
-    {
-        Id = Guid.NewGuid();
-    }
 }

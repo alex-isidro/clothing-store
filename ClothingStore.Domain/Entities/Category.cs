@@ -1,13 +1,9 @@
-﻿namespace ClothingStore.Domain.Entities;
+﻿using ClothingStore.Domain.Common;
 
-public class Category
+namespace ClothingStore.Domain.Entities;
+
+public class Category : BaseEntity
 {
-    public Guid Id { get; private set; }
     public string Name { get; set; }
     public string Description { get; set; }
-
-    public Category()
-    {
-        Id = Guid.NewGuid();
-    }
 }

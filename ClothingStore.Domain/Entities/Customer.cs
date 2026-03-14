@@ -1,9 +1,9 @@
-﻿namespace ClothingStore.Domain.Entities;
+﻿using ClothingStore.Domain.Common;
 
-public class Customer
+namespace ClothingStore.Domain.Entities;
+
+public class Customer : BaseEntity
 {
-    public Guid Id { get; private set; }
-
     public string Name { get; set; }
 
     public string Cpf { get; set; }
@@ -15,7 +15,6 @@ public class Customer
     
     public Customer()
     {
-        Id = Guid.NewGuid();
         RegistrationDate = DateTime.UtcNow;
     }
 }
