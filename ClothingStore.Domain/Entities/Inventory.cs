@@ -1,14 +1,9 @@
-﻿namespace ClothingStore.Domain.Entities;
+﻿using ClothingStore.Domain.Common;
 
-public class Inventory
+namespace ClothingStore.Domain.Entities;
+
+public class Inventory : BaseEntity
 {
-    public Guid Id { get; private set; }
     public int AvailableQuantity { get; set; }
     public int MinimumQuantity { get; set; }
-    
-
-    public Inventory()
-    {
-        Id = Guid.NewGuid();
-    }
 }

@@ -1,15 +1,10 @@
-﻿namespace ClothingStore.Domain.Entities;
+﻿using ClothingStore.Domain.Common;
 
-public class OrderItem
+namespace ClothingStore.Domain.Entities;
+
+public class OrderItem : BaseEntity
 {
-    public Guid Id { get; private set; }
     public int Quantity { get; set; }
     public decimal UnitPrice { get; set; }
     public decimal Subtotal { get; set; }
-    
-
-    public OrderItem()
-    {
-        Id = Guid.NewGuid();
-    }
 }
