@@ -1,66 +1,154 @@
-# Clothing Store API
+# CP1 — Modelo Entidade-Relacionamento (MER) e Estrutura Inicial WebAPI
 
 ## Integrantes do Grupo
-
-- **Alexander Dennis Isidro** – RM565554
-- **Kelson Zhang** – RM563748
-
----
-
-# Domínio do Projeto
-
-O domínio escolhido para o projeto é **uma loja de roupas (Clothing Store)**.
-
-O sistema representa o funcionamento básico de uma loja de roupas, permitindo o gerenciamento de clientes, produtos, categorias, marcas e pedidos realizados pelos clientes. A aplicação modela todo o fluxo de compra, desde o cadastro do cliente e seus endereços, passando pela escolha de produtos, criação de pedidos e itens de pedido, até o registro do pagamento e controle de estoque.
+- **Alexander Dennis Isidro** — **RM565554**
+- **Kelson Zhang** — **RM563748**
 
 ---
 
-# Entidades Modeladas
+## Domínio Escolhido
+**Loja de Roupas (Clothing Store)**
 
-As seguintes entidades foram modeladas no domínio do sistema:
-
-- Cliente
-- Endereco
-- Pedido
-- ItemPedido
-- Produto
-- Categoria
-- Marca
-- Pagamento
-- Estoque
+O projeto representa a estrutura inicial de uma loja de roupas, com foco exclusivo na **modelagem das entidades** e no **diagrama MER**.
 
 ---
 
-# Resumo dos Relacionamentos
+## Objetivo do Trabalho
+Este repositório foi desenvolvido para atender ao desafio de:
 
-| Entidade A | Relação | Entidade B |
-|-------------|--------|-------------|
-| Cliente | 1:N | Endereco |
-| Cliente | 1:N | Pedido |
-| Endereco | 1:N | Pedido |
-| Pedido | 1:N | ItemPedido |
-| Produto | 1:N | ItemPedido |
-| Categoria | 1:N | Produto |
-| Marca | 1:N | Produto |
-| Pedido | 1:1 | Pagamento |
-| Produto | 1:1 | Estoque |
+- elaborar um **MER (Modelo Entidade-Relacionamento)** com entidades relacionadas;
+- definir **atributos principais**, **chaves primárias** e **relacionamentos**;
+- indicar **cardinalidade** e **opcionalidade**;
+- criar a **estrutura inicial de uma WebAPI em .NET**, seguindo o padrão **Clean Architecture**;
+- modelar em código as mesmas entidades representadas no MER.
 
 ---
 
-# Estrutura do Projeto
+## Entidades Modeladas
+As entidades criadas no projeto foram:
 
-O projeto foi desenvolvido seguindo o padrão **Clean Architecture**, dividido nas seguintes camadas:
+- **Cliente**
+- **Endereco**
+- **Pedido**
+- **ItemPedido**
+- **Produto**
+- **Categoria**
+- **Marca**
+- **Pagamento**
+- **Estoque**
 
-```
-src
-├── ClothingStore.API
-├── ClothingStore.Application
-├── ClothingStore.Domain
-└── ClothingStore.Infrastructure
-```
+Todas as entidades utilizam **GUID** como chave primária, conforme a estratégia de identificação adotada no projeto.
+
+---
+
+## Resumo dos Relacionamentos
+
+### Cliente e Endereco
+- Um **Cliente** pode ter **um ou vários Endereços**.
+- Cada **Endereco** pertence a **um único Cliente**.
+
+**Cardinalidade:** `1:N`
+
+---
+
+### Cliente e Pedido
+- Um **Cliente** pode realizar **um ou vários Pedidos**.
+- Cada **Pedido** pertence a **um único Cliente**.
+
+**Cardinalidade:** `1:N`
+
+---
+
+### Endereco e Pedido
+- Um **Endereco** pode ser utilizado em **um ou vários Pedidos** de entrega.
+- Cada **Pedido** possui **um único Endereco de entrega**.
+
+**Cardinalidade:** `1:N`
+
+---
+
+### Pedido e ItemPedido
+- Um **Pedido** possui **um ou vários ItensPedido**.
+- Cada **ItemPedido** pertence a **um único Pedido**.
+
+**Cardinalidade:** `1:N`
+
+---
+
+### Produto e ItemPedido
+- Um **Produto** pode aparecer em **um ou vários ItensPedido**.
+- Cada **ItemPedido** referencia **um único Produto**.
+
+**Cardinalidade:** `1:N`
+
+---
+
+### Pedido e Produto
+- Um **Pedido** pode conter **vários Produtos**.
+- Um **Produto** pode estar presente em **vários Pedidos**.
+- Esse relacionamento é resolvido pela entidade associativa **ItemPedido**.
+
+**Cardinalidade:** `N:N`
+
+---
+
+### Categoria e Produto
+- Uma **Categoria** pode possuir **vários Produtos**.
+- Cada **Produto** pertence a **uma única Categoria**.
+
+**Cardinalidade:** `1:N`
+
+---
+
+### Marca e Produto
+- Uma **Marca** pode estar associada a **vários Produtos**.
+- Cada **Produto** pertence a **uma única Marca**.
+
+**Cardinalidade:** `1:N`
+
+---
+
+### Pedido e Pagamento
+- Um **Pedido** pode possuir **zero ou um Pagamento**.
+- Cada **Pagamento** pertence a **um único Pedido**.
+
+**Cardinalidade:** `1:1`  
+**Opcionalidade:** pagamento **opcional** para o pedido.
+
+---
+
+### Produto e Estoque
+- Um **Produto** pode possuir **zero ou um Estoque**.
+- Cada **Estoque** pertence a **um único Produto**.
+
+**Cardinalidade:** `1:1`  
+**Opcionalidade:** estoque **opcional** para o produto.
+
+---
+
+## Diagrama MER
+O diagrama MER está disponível em:
+
+`/docs/MER - clothing store.pdf`
+
+---
+
+## Tecnologias Utilizadas
+- **C#**
+- **.NET**
+- **Clean Architecture**
+- **GUID** como estratégia de identificação das entidades
+
+---
+## Estrutura do Projeto
+A organização do repositório foi feita em camadas, seguindo a proposta de **Clean Architecture**:
 
 
-- **API** – Camada responsável por expor os endpoints da aplicação.
-- **Application** – Contém regras de aplicação e comunicação entre API e domínio.
-- **Domain** – Contém as entidades e regras de negócio do sistema.
-- **Infrastructure** – Responsável por integração com banco de dados e serviços externos.
+```txt
+ClothingStore.API/
+ClothingStore.Application/
+ClothingStore.Domain/
+ClothingStore.Infrastructure/
+docs/
+README.md
+clothing store.sln
