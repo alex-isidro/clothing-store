@@ -33,15 +33,17 @@ As seguintes entidades foram modeladas no domínio do sistema:
 
 # Resumo dos Relacionamentos
 
-- Cliente (1:N) Endereco
-- Cliente (1:N) Pedido
-- Endereco (1:N) Pedido
-- Pedido (1:N) ItemPedido
-- Produto (1:N) ItemPedido
-- Categoria (1:N) Produto
-- Marca (1:N) Produto
-- Pedido (1:1) Pagamento
-- Produto (1:1) Estoque
+| Entidade A | Relação | Entidade B |
+|-------------|--------|-------------|
+| Cliente | 1:N | Endereco |
+| Cliente | 1:N | Pedido |
+| Endereco | 1:N | Pedido |
+| Pedido | 1:N | ItemPedido |
+| Produto | 1:N | ItemPedido |
+| Categoria | 1:N | Produto |
+| Marca | 1:N | Produto |
+| Pedido | 1:1 | Pagamento |
+| Produto | 1:1 | Estoque |
 
 ---
 
