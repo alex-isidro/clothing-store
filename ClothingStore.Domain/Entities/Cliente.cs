@@ -1,4 +1,4 @@
-using ClothingStore.Domain.Common;
+using ClothingStore.Domain.Commom;
 
 namespace ClothingStore.Domain.Entities;
 

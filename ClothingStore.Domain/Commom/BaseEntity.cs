@@ -1,4 +1,4 @@
-﻿namespace ClothingStore.Domain.Common;
+﻿namespace ClothingStore.Domain.Commom;
 
 public abstract class BaseEntity
 {

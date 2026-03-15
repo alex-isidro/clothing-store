@@ -1,15 +1,16 @@
-﻿using ClothingStore.Domain.Common;
+﻿using ClothingStore.Domain.Commom;
 
 namespace ClothingStore.Domain.Entities;
 
-public class Categoria : BaseEntity
+public class Marca : BaseEntity
 {
     public string Nome { get; private set; }
     public string Descricao { get; private set; }
+
     
     public List<Produto> Produtos { get; private set; }
 
-    public Categoria(string nome, string descricao)
+    public Marca(string nome, string descricao)
     {
         Nome = nome;
         Descricao = descricao;
