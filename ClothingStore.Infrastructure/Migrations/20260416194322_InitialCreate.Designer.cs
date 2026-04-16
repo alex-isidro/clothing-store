@@ -3,6 +3,7 @@ using System;
 using ClothingStore.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -10,10 +11,12 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace ClothingStore.Infrastructure.Migrations
 {
-    [DbContext(typeof(ClothingStoreContex))]
-    partial class ClothingStoreContexModelSnapshot : ModelSnapshot
+    [DbContext(typeof(ClothingStoreContext))]
+    [Migration("20260416194322_InitialCreate")]
+    partial class InitialCreate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -113,11 +116,7 @@ namespace ClothingStore.Infrastructure.Migrations
                     b.Property<Guid>("ClienteId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("ClienteId1")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("Complemento")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
@@ -139,8 +138,6 @@ namespace ClothingStore.Infrastructure.Migrations
 
                     b.HasIndex("ClienteId");
 
-                    b.HasIndex("ClienteId1");
-
                     b.ToTable("Enderecos");
                 });
 
@@ -159,9 +156,6 @@ namespace ClothingStore.Infrastructure.Migrations
                     b.Property<Guid>("ProdutoId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("ProdutoId1")
-                        .HasColumnType("uuid");
-
                     b.Property<int>("QuantidadeDisponivel")
                         .HasColumnType("integer");
 
@@ -171,9 +165,6 @@ namespace ClothingStore.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ProdutoId")
-                        .IsUnique();
-
-                    b.HasIndex("ProdutoId1")
                         .IsUnique();
 
                     b.ToTable("Estoques");
@@ -194,16 +185,10 @@ namespace ClothingStore.Infrastructure.Migrations
                     b.Property<Guid>("PedidoId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("PedidoId1")
-                        .HasColumnType("uuid");
-
                     b.Property<decimal>("PrecoUnitario")
                         .HasColumnType("decimal(10,2)");
 
                     b.Property<Guid>("ProdutoId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("ProdutoId1")
                         .HasColumnType("uuid");
 
                     b.Property<int>("Quantidade")
@@ -216,11 +201,7 @@ namespace ClothingStore.Infrastructure.Migrations
 
                     b.HasIndex("PedidoId");
 
-                    b.HasIndex("PedidoId1");
-
                     b.HasIndex("ProdutoId");
-
-                    b.HasIndex("ProdutoId1");
 
                     b.ToTable("ItensPedido");
                 });
@@ -268,9 +249,6 @@ namespace ClothingStore.Infrastructure.Migrations
                     b.Property<Guid>("PedidoId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("PedidoId1")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("StatusPagamento")
                         .IsRequired()
                         .HasColumnType("text");
@@ -287,9 +265,6 @@ namespace ClothingStore.Infrastructure.Migrations
                     b.HasIndex("PedidoId")
                         .IsUnique();
 
-                    b.HasIndex("PedidoId1")
-                        .IsUnique();
-
                     b.ToTable("Pagamentos");
                 });
 
@@ -303,9 +278,6 @@ namespace ClothingStore.Infrastructure.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<Guid>("ClienteId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("ClienteId1")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
@@ -328,8 +300,6 @@ namespace ClothingStore.Infrastructure.Migrations
 
                     b.HasIndex("ClienteId");
 
-                    b.HasIndex("ClienteId1");
-
                     b.HasIndex("EnderecoEntregaId");
 
                     b.ToTable("Pedidos");
@@ -347,9 +317,6 @@ namespace ClothingStore.Infrastructure.Migrations
                     b.Property<Guid>("CategoriaId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("CategoriaId1")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("Cor")
                         .IsRequired()
                         .HasColumnType("text");
@@ -362,9 +329,6 @@ namespace ClothingStore.Infrastructure.Migrations
                         .HasColumnType("text");
 
                     b.Property<Guid>("MarcaId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("MarcaId1")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Nome")
@@ -382,11 +346,7 @@ namespace ClothingStore.Infrastructure.Migrations
 
                     b.HasIndex("CategoriaId");
 
-                    b.HasIndex("CategoriaId1");
-
                     b.HasIndex("MarcaId");
-
-                    b.HasIndex("MarcaId1");
 
                     b.ToTable("Produtos");
                 });
@@ -394,76 +354,52 @@ namespace ClothingStore.Infrastructure.Migrations
             modelBuilder.Entity("ClothingStore.Domain.Entities.Endereco", b =>
                 {
                     b.HasOne("ClothingStore.Domain.Entities.Cliente", null)
-                        .WithMany()
+                        .WithMany("Enderecos")
                         .HasForeignKey("ClienteId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("ClothingStore.Domain.Entities.Cliente", null)
-                        .WithMany("Enderecos")
-                        .HasForeignKey("ClienteId1");
                 });
 
             modelBuilder.Entity("ClothingStore.Domain.Entities.Estoque", b =>
                 {
                     b.HasOne("ClothingStore.Domain.Entities.Produto", null)
-                        .WithOne()
+                        .WithOne("Estoque")
                         .HasForeignKey("ClothingStore.Domain.Entities.Estoque", "ProdutoId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("ClothingStore.Domain.Entities.Produto", null)
-                        .WithOne("Estoque")
-                        .HasForeignKey("ClothingStore.Domain.Entities.Estoque", "ProdutoId1");
                 });
 
             modelBuilder.Entity("ClothingStore.Domain.Entities.ItemPedido", b =>
                 {
                     b.HasOne("ClothingStore.Domain.Entities.Pedido", null)
-                        .WithMany()
-                        .HasForeignKey("PedidoId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("ClothingStore.Domain.Entities.Pedido", null)
                         .WithMany("Itens")
-                        .HasForeignKey("PedidoId1");
-
-                    b.HasOne("ClothingStore.Domain.Entities.Produto", null)
-                        .WithMany()
-                        .HasForeignKey("ProdutoId")
+                        .HasForeignKey("PedidoId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("ClothingStore.Domain.Entities.Produto", null)
                         .WithMany("ItensPedido")
-                        .HasForeignKey("ProdutoId1");
+                        .HasForeignKey("ProdutoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("ClothingStore.Domain.Entities.Pagamento", b =>
                 {
                     b.HasOne("ClothingStore.Domain.Entities.Pedido", null)
-                        .WithOne()
+                        .WithOne("Pagamento")
                         .HasForeignKey("ClothingStore.Domain.Entities.Pagamento", "PedidoId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("ClothingStore.Domain.Entities.Pedido", null)
-                        .WithOne("Pagamento")
-                        .HasForeignKey("ClothingStore.Domain.Entities.Pagamento", "PedidoId1");
                 });
 
             modelBuilder.Entity("ClothingStore.Domain.Entities.Pedido", b =>
                 {
                     b.HasOne("ClothingStore.Domain.Entities.Cliente", null)
-                        .WithMany()
+                        .WithMany("Pedidos")
                         .HasForeignKey("ClienteId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("ClothingStore.Domain.Entities.Cliente", null)
-                        .WithMany("Pedidos")
-                        .HasForeignKey("ClienteId1");
 
                     b.HasOne("ClothingStore.Domain.Entities.Endereco", null)
                         .WithMany()
@@ -475,24 +411,16 @@ namespace ClothingStore.Infrastructure.Migrations
             modelBuilder.Entity("ClothingStore.Domain.Entities.Produto", b =>
                 {
                     b.HasOne("ClothingStore.Domain.Entities.Categoria", null)
-                        .WithMany()
+                        .WithMany("Produtos")
                         .HasForeignKey("CategoriaId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ClothingStore.Domain.Entities.Categoria", null)
-                        .WithMany("Produtos")
-                        .HasForeignKey("CategoriaId1");
-
                     b.HasOne("ClothingStore.Domain.Entities.Marca", null)
-                        .WithMany()
+                        .WithMany("Produtos")
                         .HasForeignKey("MarcaId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("ClothingStore.Domain.Entities.Marca", null)
-                        .WithMany("Produtos")
-                        .HasForeignKey("MarcaId1");
                 });
 
             modelBuilder.Entity("ClothingStore.Domain.Entities.Categoria", b =>

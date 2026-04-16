@@ -16,7 +16,7 @@ public class PedidoConfiguration : IEntityTypeConfiguration<Pedido>
 
         // N:1
         builder.HasOne<Cliente>()
-            .WithMany()
+            .WithMany(c => c.Pedidos)
             .HasForeignKey(p => p.ClienteId)
             .IsRequired();
 

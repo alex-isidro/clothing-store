@@ -18,13 +18,13 @@ public class ItemPedidoConfiguration : IEntityTypeConfiguration<ItemPedido>
 
         // N:1
         builder.HasOne<Pedido>()
-            .WithMany()
+            .WithMany(p => p.Itens)
             .HasForeignKey(i => i.PedidoId)
             .IsRequired();
 
         // N:1
         builder.HasOne<Produto>()
-            .WithMany()
+            .WithMany(p => p.ItensPedido)
             .HasForeignKey(i => i.ProdutoId)
             .IsRequired();
     }

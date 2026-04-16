@@ -10,7 +10,7 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
         
         // Add services to the container.
-        builder.Services.AddDbContext<ClothingStoreContex>(options =>
+        builder.Services.AddDbContext<ClothingStoreContext>(options =>
         {
             options.UseNpgsql(builder.Configuration.GetConnectionString("Postgres"));
         });

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace ClothingStore.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class Initial : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -67,12 +67,11 @@ namespace ClothingStore.Infrastructure.Migrations
                     ClienteId = table.Column<Guid>(type: "uuid", nullable: false),
                     Logradouro = table.Column<string>(type: "text", nullable: false),
                     Numero = table.Column<string>(type: "text", nullable: false),
-                    Complemento = table.Column<string>(type: "text", nullable: false),
+                    Complemento = table.Column<string>(type: "text", nullable: true),
                     Bairro = table.Column<string>(type: "text", nullable: false),
                     Cidade = table.Column<string>(type: "text", nullable: false),
                     Estado = table.Column<string>(type: "text", nullable: false),
                     Cep = table.Column<string>(type: "text", nullable: false),
-                    ClienteId1 = table.Column<Guid>(type: "uuid", nullable: true),
                     Active = table.Column<bool>(type: "boolean", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
@@ -85,11 +84,6 @@ namespace ClothingStore.Infrastructure.Migrations
                         principalTable: "Clientes",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Enderecos_Clientes_ClienteId1",
-                        column: x => x.ClienteId1,
-                        principalTable: "Clientes",
-                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -104,8 +98,6 @@ namespace ClothingStore.Infrastructure.Migrations
                     Preco = table.Column<decimal>(type: "numeric(10,2)", nullable: false),
                     Tamanho = table.Column<string>(type: "text", nullable: false),
                     Cor = table.Column<string>(type: "text", nullable: false),
-                    CategoriaId1 = table.Column<Guid>(type: "uuid", nullable: true),
-                    MarcaId1 = table.Column<Guid>(type: "uuid", nullable: true),
                     Active = table.Column<bool>(type: "boolean", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
@@ -119,21 +111,11 @@ namespace ClothingStore.Infrastructure.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Produtos_Categorias_CategoriaId1",
-                        column: x => x.CategoriaId1,
-                        principalTable: "Categorias",
-                        principalColumn: "Id");
-                    table.ForeignKey(
                         name: "FK_Produtos_Marcas_MarcaId",
                         column: x => x.MarcaId,
                         principalTable: "Marcas",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Produtos_Marcas_MarcaId1",
-                        column: x => x.MarcaId1,
-                        principalTable: "Marcas",
-                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -146,7 +128,6 @@ namespace ClothingStore.Infrastructure.Migrations
                     DataPedido = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     Status = table.Column<string>(type: "text", nullable: false),
                     ValorTotal = table.Column<decimal>(type: "numeric(10,2)", nullable: false),
-                    ClienteId1 = table.Column<Guid>(type: "uuid", nullable: true),
                     Active = table.Column<bool>(type: "boolean", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
@@ -159,11 +140,6 @@ namespace ClothingStore.Infrastructure.Migrations
                         principalTable: "Clientes",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Pedidos_Clientes_ClienteId1",
-                        column: x => x.ClienteId1,
-                        principalTable: "Clientes",
-                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Pedidos_Enderecos_EnderecoEntregaId",
                         column: x => x.EnderecoEntregaId,
@@ -180,7 +156,6 @@ namespace ClothingStore.Infrastructure.Migrations
                     ProdutoId = table.Column<Guid>(type: "uuid", nullable: false),
                     QuantidadeDisponivel = table.Column<int>(type: "integer", nullable: false),
                     QuantidadeMinima = table.Column<int>(type: "integer", nullable: false),
-                    ProdutoId1 = table.Column<Guid>(type: "uuid", nullable: true),
                     Active = table.Column<bool>(type: "boolean", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
@@ -193,11 +168,6 @@ namespace ClothingStore.Infrastructure.Migrations
                         principalTable: "Produtos",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Estoques_Produtos_ProdutoId1",
-                        column: x => x.ProdutoId1,
-                        principalTable: "Produtos",
-                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -210,8 +180,6 @@ namespace ClothingStore.Infrastructure.Migrations
                     Quantidade = table.Column<int>(type: "integer", nullable: false),
                     PrecoUnitario = table.Column<decimal>(type: "numeric(10,2)", nullable: false),
                     Subtotal = table.Column<decimal>(type: "numeric(10,2)", nullable: false),
-                    PedidoId1 = table.Column<Guid>(type: "uuid", nullable: true),
-                    ProdutoId1 = table.Column<Guid>(type: "uuid", nullable: true),
                     Active = table.Column<bool>(type: "boolean", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
@@ -225,21 +193,11 @@ namespace ClothingStore.Infrastructure.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_ItensPedido_Pedidos_PedidoId1",
-                        column: x => x.PedidoId1,
-                        principalTable: "Pedidos",
-                        principalColumn: "Id");
-                    table.ForeignKey(
                         name: "FK_ItensPedido_Produtos_ProdutoId",
                         column: x => x.ProdutoId,
                         principalTable: "Produtos",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_ItensPedido_Produtos_ProdutoId1",
-                        column: x => x.ProdutoId1,
-                        principalTable: "Produtos",
-                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -252,7 +210,6 @@ namespace ClothingStore.Infrastructure.Migrations
                     StatusPagamento = table.Column<string>(type: "text", nullable: false),
                     Valor = table.Column<decimal>(type: "numeric(10,2)", nullable: false),
                     DataPagamento = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    PedidoId1 = table.Column<Guid>(type: "uuid", nullable: true),
                     Active = table.Column<bool>(type: "boolean", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
@@ -265,11 +222,6 @@ namespace ClothingStore.Infrastructure.Migrations
                         principalTable: "Pedidos",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Pagamentos_Pedidos_PedidoId1",
-                        column: x => x.PedidoId1,
-                        principalTable: "Pedidos",
-                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateIndex(
@@ -290,20 +242,9 @@ namespace ClothingStore.Infrastructure.Migrations
                 column: "ClienteId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Enderecos_ClienteId1",
-                table: "Enderecos",
-                column: "ClienteId1");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Estoques_ProdutoId",
                 table: "Estoques",
                 column: "ProdutoId",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Estoques_ProdutoId1",
-                table: "Estoques",
-                column: "ProdutoId1",
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -312,19 +253,9 @@ namespace ClothingStore.Infrastructure.Migrations
                 column: "PedidoId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ItensPedido_PedidoId1",
-                table: "ItensPedido",
-                column: "PedidoId1");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_ItensPedido_ProdutoId",
                 table: "ItensPedido",
                 column: "ProdutoId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ItensPedido_ProdutoId1",
-                table: "ItensPedido",
-                column: "ProdutoId1");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Pagamentos_PedidoId",
@@ -333,20 +264,9 @@ namespace ClothingStore.Infrastructure.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_Pagamentos_PedidoId1",
-                table: "Pagamentos",
-                column: "PedidoId1",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Pedidos_ClienteId",
                 table: "Pedidos",
                 column: "ClienteId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Pedidos_ClienteId1",
-                table: "Pedidos",
-                column: "ClienteId1");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Pedidos_EnderecoEntregaId",
@@ -359,19 +279,9 @@ namespace ClothingStore.Infrastructure.Migrations
                 column: "CategoriaId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Produtos_CategoriaId1",
-                table: "Produtos",
-                column: "CategoriaId1");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Produtos_MarcaId",
                 table: "Produtos",
                 column: "MarcaId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Produtos_MarcaId1",
-                table: "Produtos",
-                column: "MarcaId1");
         }
 
         /// <inheritdoc />

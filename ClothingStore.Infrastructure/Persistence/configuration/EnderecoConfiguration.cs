@@ -17,7 +17,7 @@ public class EnderecoConfiguration : IEntityTypeConfiguration<Endereco>
 
         // N:1
         builder.HasOne<Cliente>()
-            .WithMany()
+            .WithMany(c => c.Enderecos)
             .HasForeignKey(e => e.ClienteId)
             .IsRequired();
     }

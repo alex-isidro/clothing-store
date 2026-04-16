@@ -129,7 +129,7 @@ Todas as entidades utilizam **GUID** como chave primária, conforme a estratégi
 ## Diagrama MER
 O diagrama MER está disponível em:
 
-`/docs/MER - clothing store.pdf`
+`/docs/mer.pdf`
 
 ---
 

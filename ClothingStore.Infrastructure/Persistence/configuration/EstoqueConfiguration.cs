@@ -13,7 +13,7 @@ public class EstoqueConfiguration : IEntityTypeConfiguration<Estoque>
 
         // 1:1
         builder.HasOne<Produto>()
-            .WithOne()
+            .WithOne(p => p.Estoque)
             .HasForeignKey<Estoque>(e => e.ProdutoId)
             .IsRequired();
     }

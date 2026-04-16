@@ -19,13 +19,12 @@ public class ProdutoConfiguration : IEntityTypeConfiguration<Produto>
 
         // N:1
         builder.HasOne<Categoria>()
-            .WithMany()
+            .WithMany(c => c.Produtos)
             .HasForeignKey(p => p.CategoriaId)
             .IsRequired();
-
         // N:1
         builder.HasOne<Marca>()
-            .WithMany()
+            .WithMany(m => m.Produtos)
             .HasForeignKey(p => p.MarcaId)
             .IsRequired();
     }

@@ -3,9 +3,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ClothingStore.Infrastructure.Persistence;
 
-public class ClothingStoreContex : DbContext
+public class ClothingStoreContext : DbContext
 {
-    public ClothingStoreContex(DbContextOptions<ClothingStoreContex> optionsStore) : base(optionsStore)
+    public ClothingStoreContext(DbContextOptions<ClothingStoreContext> optionsStore) : base(optionsStore)
     {
         
     }
@@ -22,6 +22,6 @@ public class ClothingStoreContex : DbContext
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(ClothingStoreContex).Assembly);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(ClothingStoreContext).Assembly);
     }
 }

@@ -18,7 +18,7 @@ public class PagamentoConfiguration : IEntityTypeConfiguration<Pagamento>
 
         // 1:1
         builder.HasOne<Pedido>()
-            .WithOne()
+            .WithOne(p => p.Pagamento)
             .HasForeignKey<Pagamento>(p => p.PedidoId)
             .IsRequired();
     }
