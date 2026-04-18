@@ -1,20 +1,20 @@
-# CP1 — Modelo Entidade-Relacionamento (MER) e Estrutura Inicial WebAPI
+# CP2 - Modelo Entidade-Relacionamento (MER) e Estrutura Inicial da WebAPI
 
 ## Integrantes do Grupo
-- **Alexander Dennis Isidro** — **RM565554**
-- **Kelson Zhang** — **RM563748**
+- **Alexander Dennis Isidro** - **RM565554**
+- **Kelson Zhang** - **RM563748**
 
 ---
 
 ## Domínio Escolhido
 **Loja de Roupas (Clothing Store)**
 
-O projeto representa a estrutura inicial de uma loja de roupas, com foco exclusivo na **modelagem das entidades** e no **diagrama MER**.
+Este projeto representa a base de uma loja de roupas, com foco na **modelagem das entidades**, no **diagrama MER** e na **estrutura inicial de uma WebAPI em .NET** com separação por camadas.
 
 ---
 
 ## Objetivo do Trabalho
-Este repositório foi desenvolvido para atender ao desafio de:
+Este repositório foi desenvolvido para:
 
 - elaborar um **MER (Modelo Entidade-Relacionamento)** com entidades relacionadas;
 - definir **atributos principais**, **chaves primárias** e **relacionamentos**;
@@ -25,7 +25,7 @@ Este repositório foi desenvolvido para atender ao desafio de:
 ---
 
 ## Entidades Modeladas
-As entidades criadas no projeto foram:
+As entidades do domínio são:
 
 - **Cliente**
 - **Endereco**
@@ -37,7 +37,7 @@ As entidades criadas no projeto foram:
 - **Pagamento**
 - **Estoque**
 
-Todas as entidades utilizam **GUID** como chave primária, conforme a estratégia de identificação adotada no projeto.
+Todas as entidades utilizam **GUID** como chave primária.
 
 ---
 
@@ -49,23 +49,17 @@ Todas as entidades utilizam **GUID** como chave primária, conforme a estratégi
 
 **Cardinalidade:** `1:N`
 
----
-
 ### Cliente e Pedido
 - Um **Cliente** pode realizar **um ou vários Pedidos**.
 - Cada **Pedido** pertence a **um único Cliente**.
 
 **Cardinalidade:** `1:N`
 
----
-
 ### Endereco e Pedido
-- Um **Endereco** pode ser utilizado em **um ou vários Pedidos** de entrega.
+- Um **Endereco** pode ser utilizado em **um ou vários Pedidos** para entrega.
 - Cada **Pedido** possui **um único Endereco de entrega**.
 
 **Cardinalidade:** `1:N`
-
----
 
 ### Pedido e ItemPedido
 - Um **Pedido** possui **um ou vários ItensPedido**.
@@ -73,15 +67,11 @@ Todas as entidades utilizam **GUID** como chave primária, conforme a estratégi
 
 **Cardinalidade:** `1:N`
 
----
-
 ### Produto e ItemPedido
 - Um **Produto** pode aparecer em **um ou vários ItensPedido**.
 - Cada **ItemPedido** referencia **um único Produto**.
 
 **Cardinalidade:** `1:N`
-
----
 
 ### Pedido e Produto
 - Um **Pedido** pode conter **vários Produtos**.
@@ -90,15 +80,11 @@ Todas as entidades utilizam **GUID** como chave primária, conforme a estratégi
 
 **Cardinalidade:** `N:N`
 
----
-
 ### Categoria e Produto
 - Uma **Categoria** pode possuir **vários Produtos**.
 - Cada **Produto** pertence a **uma única Categoria**.
 
 **Cardinalidade:** `1:N`
-
----
 
 ### Marca e Produto
 - Uma **Marca** pode estar associada a **vários Produtos**.
@@ -106,16 +92,12 @@ Todas as entidades utilizam **GUID** como chave primária, conforme a estratégi
 
 **Cardinalidade:** `1:N`
 
----
-
 ### Pedido e Pagamento
 - Um **Pedido** pode possuir **zero ou um Pagamento**.
 - Cada **Pagamento** pertence a **um único Pedido**.
 
 **Cardinalidade:** `1:1`  
 **Opcionalidade:** pagamento **opcional** para o pedido.
-
----
 
 ### Produto e Estoque
 - Um **Produto** pode possuir **zero ou um Estoque**.
@@ -127,28 +109,69 @@ Todas as entidades utilizam **GUID** como chave primária, conforme a estratégi
 ---
 
 ## Diagrama MER
-O diagrama MER está disponível em:
-
-`/docs/mer.pdf`
+O diagrama MER está disponível em `docs/mer.pdf`.
 
 ---
 
 ## Tecnologias Utilizadas
 - **C#**
 - **.NET**
+- **Entity Framework Core**
+- **PostgreSQL**
 - **Clean Architecture**
 - **GUID** como estratégia de identificação das entidades
 
 ---
-## Estrutura do Projeto
-A organização do repositório foi feita em camadas, seguindo a proposta de **Clean Architecture**:
 
+## Estrutura do Projeto
+A solução está organizada por camadas, com responsabilidades separadas para facilitar manutenção e evolução:
 
 ```txt
-ClothingStore.API/
-ClothingStore.Application/
-ClothingStore.Domain/
-ClothingStore.Infrastructure/
-docs/
-README.md
-clothing store.sln
+clothing-store/
+|-- ClothingStore.API/
+|   |-- Program.cs
+|   |-- appsettings.json
+|
+|-- ClothingStore.Application/
+|   |-- Interfaces/
+|       |-- Repositories/
+|
+|-- ClothingStore.Domain/
+|   |-- Commom/
+|   |-- Entities/
+|
+|-- ClothingStore.Infrastructure/
+|   |-- Persistence/
+|   |   |-- ClothingStoreContext.cs
+|   |   |-- configuration/
+|   |   |-- Repositories/
+|   |-- Migrations/
+|
+|-- docs/
+|   |-- mer.pdf
+|
+|-- README.md
+`-- clothing store.sln
+```
+
+### Papel de cada camada
+- **ClothingStore.API**: ponto de entrada da aplicação, configuração de serviços, pipeline HTTP e injeção de dependências.
+- **ClothingStore.Application**: contratos e abstrações da aplicação (ex.: interfaces de repositório).
+- **ClothingStore.Domain**: núcleo do negócio com entidades e regras de domínio.
+- **ClothingStore.Infrastructure**: detalhes de persistência com EF Core, configurações de mapeamento, repositórios e migrações.
+- **docs**: documentação de apoio, incluindo o MER do projeto.
+
+---
+
+## Migrations e DbContext
+O acesso ao banco é centralizado no `ClothingStore.Infrastructure/Persistence/ClothingStoreContext.cs`, que define os `DbSet<>` das entidades e aplica os mapeamentos com `ApplyConfigurationsFromAssembly`.
+
+As migrações ficam em `ClothingStore.Infrastructure/Migrations/`, incluindo a criação inicial (`InitialCreate`) e o snapshot do modelo. Na API, o contexto é registrado no `ClothingStore.API/Program.cs` com `AddDbContext<ClothingStoreContext>()` e `UseNpgsql`, utilizando a connection string `Postgres`.
+
+---
+
+## Repositories
+Os contratos de acesso a dados estão em `ClothingStore.Application/Interfaces/Repositories/`, com a interface genérica `IGenericRepository<>` e interfaces específicas como `IClienteRepository`, `IPedidoRepository` e `IProdutoRepository`.
+
+As implementações estão em `ClothingStore.Infrastructure/Persistence/Repositories/`, com `GenericRepository<>` e os repositórios específicos da aplicação. O vínculo entre interfaces e implementações é feito via injeção de dependências no `ClothingStore.API/Program.cs`.
+
