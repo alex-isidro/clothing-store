@@ -8,8 +8,11 @@ public class EstoqueConfiguration : IEntityTypeConfiguration<Estoque>
     {
         builder.HasKey(e => e.Id);
 
-        builder.Property(e => e.QuantidadeDisponivel).IsRequired();
-        builder.Property(e => e.QuantidadeMinima).IsRequired();
+        builder.Property(e => e.QuantidadeDisponivel)
+            .IsRequired();
+
+        builder.Property(e => e.QuantidadeMinima)
+            .IsRequired();
 
         // 1:1
         builder.HasOne<Produto>()

@@ -1,22 +1,36 @@
 using ClothingStore.Application.Interfaces.Repositories;
 using ClothingStore.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace ClothingStore.Infrastructure.Persistence.Repositories;
 
 public class ClienteRepository(ClothingStoreContext context) : GenericRepository<Cliente>(context), IClienteRepository
 {
-    public Task<Cliente?> GetByEmailAsync(string email)
+    public async Task<Cliente?> GetByEmailAsync(string email)
     {
-        throw new NotImplementedException();
+        var normalizedEmail = email.Trim();
+
+        return await context.Clientes
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Email == normalizedEmail);
     }
 
-    public Task<Cliente?> GetByCpfAsync(string cpf)
+    public async Task<Cliente?> GetByCpfAsync(string cpf)
     {
-        throw new NotImplementedException();
+        var normalizedCpf = cpf.Trim();
+
+        return await context.Clientes
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Cpf == normalizedCpf);
     }
 
-    public Task<Cliente?> GetWithPedidosAsync(Guid id)
+    public async Task<Cliente?> GetWithPedidosAsync(Guid id)
     {
-        throw new NotImplementedException();
+        return await context.Clientes
+            .AsNoTracking()
+            .Include(c => c.Pedidos)
+                .ThenInclude(p => p.Itens)
+                    .ThenInclude(i => i.Produto)
+            .FirstOrDefaultAsync(c => c.Id == id);
     }
 }

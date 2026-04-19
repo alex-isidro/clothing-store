@@ -8,7 +8,12 @@ public class CategoriaConfiguration : IEntityTypeConfiguration<Categoria>
     {
         builder.HasKey(c => c.Id);
 
-        builder.Property(c => c.Nome).IsRequired();
-        builder.Property(c => c.Descricao).IsRequired();
+        builder.Property(c => c.Nome)
+            .IsRequired()
+            .HasMaxLength(100);
+
+        builder.Property(c => c.Descricao)
+            .IsRequired()
+            .HasMaxLength(300);
     }
 }

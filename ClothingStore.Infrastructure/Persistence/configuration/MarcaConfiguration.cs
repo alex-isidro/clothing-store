@@ -8,7 +8,12 @@ public class MarcaConfiguration : IEntityTypeConfiguration<Marca>
     {
         builder.HasKey(m => m.Id);
 
-        builder.Property(m => m.Nome).IsRequired();
-        builder.Property(m => m.Descricao).IsRequired();
+        builder.Property(m => m.Nome)
+            .IsRequired()
+            .HasMaxLength(100);
+
+        builder.Property(m => m.Descricao)
+            .IsRequired()
+            .HasMaxLength(300);
     }
 }

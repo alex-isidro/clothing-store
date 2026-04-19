@@ -8,13 +8,20 @@ public class PagamentoConfiguration : IEntityTypeConfiguration<Pagamento>
     {
         builder.HasKey(p => p.Id);
 
-        builder.Property(p => p.TipoPagamento).IsRequired();
-        builder.Property(p => p.StatusPagamento).IsRequired();
+        builder.Property(p => p.TipoPagamento)
+            .IsRequired()
+            .HasMaxLength(50);
+
+        builder.Property(p => p.StatusPagamento)
+            .IsRequired()
+            .HasMaxLength(50);
 
         builder.Property(p => p.Valor)
             .HasColumnType("decimal(10,2)");
 
-        builder.Property(p => p.DataPagamento).IsRequired();
+        builder.Property(p => p.DataPagamento)
+            .IsRequired()
+            .HasColumnType("timestamp");
 
         // 1:1
         builder.HasOne<Pedido>()

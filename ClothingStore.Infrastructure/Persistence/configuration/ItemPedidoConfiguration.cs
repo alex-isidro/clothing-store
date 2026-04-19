@@ -8,7 +8,11 @@ public class ItemPedidoConfiguration : IEntityTypeConfiguration<ItemPedido>
     {
         builder.HasKey(i => i.Id);
 
-        builder.Property(i => i.Quantidade).IsRequired();
+        builder.HasIndex(i => new { i.PedidoId, i.ProdutoId })
+            .IsUnique();
+
+        builder.Property(i => i.Quantidade)
+            .IsRequired();
 
         builder.Property(i => i.PrecoUnitario)
             .HasColumnType("decimal(10,2)");
