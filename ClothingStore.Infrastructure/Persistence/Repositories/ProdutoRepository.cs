@@ -4,11 +4,15 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ClothingStore.Infrastructure.Persistence.Repositories;
 
-public class ProdutoRepository(ClothingStoreContext context) : GenericRepository<Produto>(context), IProdutoRepository
+public class ProdutoRepository : GenericRepository<Produto>, IProdutoRepository
 {
+    public ProdutoRepository(ClothingStoreContext context) : base(context)
+    {
+    }
+
     public async Task<List<Produto>> GetByCategoriaAsync(Guid categoriaId)
     {
-        return await context.Produtos
+        return await Context.Produtos
             .AsNoTracking()
             .Where(p => p.CategoriaId == categoriaId)
             .OrderBy(p => p.Nome)
@@ -17,7 +21,7 @@ public class ProdutoRepository(ClothingStoreContext context) : GenericRepository
 
     public async Task<List<Produto>> GetByMarcaAsync(Guid marcaId)
     {
-        return await context.Produtos
+        return await Context.Produtos
             .AsNoTracking()
             .Where(p => p.MarcaId == marcaId)
             .OrderBy(p => p.Nome)

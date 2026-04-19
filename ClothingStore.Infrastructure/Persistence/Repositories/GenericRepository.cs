@@ -4,9 +4,16 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ClothingStore.Infrastructure.Persistence.Repositories;
 
-public class GenericRepository<T>(ClothingStoreContext context) : IGenericRepository<T> where T : BaseEntity
+public class GenericRepository<T> : IGenericRepository<T> where T : BaseEntity
 {
-    private readonly DbSet<T> _dbSet = context.Set<T>();
+    protected readonly ClothingStoreContext Context;
+    private readonly DbSet<T> _dbSet;
+
+    protected GenericRepository(ClothingStoreContext context)
+    {
+        Context = context;
+        _dbSet = Context.Set<T>();
+    }
 
     public async Task<T?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
@@ -21,19 +28,19 @@ public class GenericRepository<T>(ClothingStoreContext context) : IGenericReposi
     public async Task AddAsync(T entity, CancellationToken cancellationToken = default)
     {
         await _dbSet.AddAsync(entity, cancellationToken);
-        await context.SaveChangesAsync(cancellationToken);
+        await Context.SaveChangesAsync(cancellationToken);
     }
 
     public void Update(T entity)
     {
         _dbSet.Update(entity);
-        context.SaveChanges();
+        Context.SaveChanges();
     }
 
     public void Remove(T entity)
     {
         _dbSet.Remove(entity);
-        context.SaveChanges();
+        Context.SaveChanges();
     }
 
     public async Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default)

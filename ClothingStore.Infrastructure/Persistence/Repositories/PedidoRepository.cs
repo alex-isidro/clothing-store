@@ -4,11 +4,15 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ClothingStore.Infrastructure.Persistence.Repositories;
 
-public class PedidoRepository(ClothingStoreContext context) : GenericRepository<Pedido>(context), IPedidoRepository
+public class PedidoRepository : GenericRepository<Pedido>, IPedidoRepository
 {
+    public PedidoRepository(ClothingStoreContext context) : base(context)
+    {
+    }
+
     public async Task<List<Pedido>> GetByClienteIdAsync(Guid clienteId)
     {
-        return await context.Pedidos
+        return await Context.Pedidos
             .AsNoTracking()
             .Where(p => p.ClienteId == clienteId)
             .Include(p => p.Itens)
@@ -19,7 +23,7 @@ public class PedidoRepository(ClothingStoreContext context) : GenericRepository<
 
     public async Task<Pedido?> GetWithItensAsync(Guid id)
     {
-        return await context.Pedidos
+        return await Context.Pedidos
             .AsNoTracking()
             .Include(p => p.Itens)
             .ThenInclude(i => i.Produto)
@@ -31,7 +35,7 @@ public class PedidoRepository(ClothingStoreContext context) : GenericRepository<
     {
         var normalizedStatus = status.Trim().ToLower();
 
-        return await context.Pedidos
+        return await Context.Pedidos
             .AsNoTracking()
             .Where(p => p.Status.ToLower() == normalizedStatus)
             .Include(p => p.Itens)

@@ -174,7 +174,13 @@ Na API, o contexto é registrado no `ClothingStore.API/Program.cs` com `AddDbCon
 
 ### Como reproduzir no ambiente local
 1. Configurar `ConnectionStrings:Postgres` via User Secrets (ou variável de ambiente).
-2. Executar a atualização do banco:
+2. Exemplo com User Secrets:
+
+```bash
+dotnet user-secrets --project ClothingStore.API/ClothingStore.API.csproj set "ConnectionStrings:Postgres" "Host=localhost;Port=5432;Database=clothing_store;Username=postgres;Password=SUA_SENHA"
+```
+
+3. Executar a atualização do banco:
 
 ```bash
 dotnet ef database update --project ClothingStore.Infrastructure/ClothingStore.Infrastructure.csproj --startup-project ClothingStore.API/ClothingStore.API.csproj
