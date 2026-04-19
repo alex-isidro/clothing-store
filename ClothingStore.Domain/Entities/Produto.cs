@@ -13,8 +13,8 @@ public class Produto : BaseEntity
     public string Cor { get; private set; }
     
     public Estoque? Estoque { get; private set; }
-    
-    public List<ItemPedido> ItensPedido { get; private set; }
+
+    public List<ItemPedido> ItensPedido { get; private set; } = new();
 
     public Produto(Guid marcaId, Guid categoriaId, string nome, string descricao, decimal preco, string tamanho, string cor)
     {
