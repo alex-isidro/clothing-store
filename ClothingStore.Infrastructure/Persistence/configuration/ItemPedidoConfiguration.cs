@@ -21,13 +21,13 @@ public class ItemPedidoConfiguration : IEntityTypeConfiguration<ItemPedido>
             .HasColumnType("decimal(10,2)");
 
         // N:1
-        builder.HasOne<Pedido>()
+        builder.HasOne(i => i.Pedido)
             .WithMany(p => p.Itens)
             .HasForeignKey(i => i.PedidoId)
             .IsRequired();
 
         // N:1
-        builder.HasOne<Produto>()
+        builder.HasOne(i => i.Produto)
             .WithMany(p => p.ItensPedido)
             .HasForeignKey(i => i.ProdutoId)
             .IsRequired();

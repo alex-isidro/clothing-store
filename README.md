@@ -166,7 +166,19 @@ clothing-store/
 ## Migrations e DbContext
 O acesso ao banco é centralizado no `ClothingStore.Infrastructure/Persistence/ClothingStoreContext.cs`, que define os `DbSet<>` das entidades e aplica os mapeamentos com `ApplyConfigurationsFromAssembly`.
 
-As migrações ficam em `ClothingStore.Infrastructure/Migrations/`, incluindo a criação inicial (`InitialCreate`) e o snapshot do modelo. Na API, o contexto é registrado no `ClothingStore.API/Program.cs` com `AddDbContext<ClothingStoreContext>()` e `UseNpgsql`, utilizando a connection string `Postgres`.
+As migrações ficam em `ClothingStore.Infrastructure/Migrations/`:
+- `InitialCreate`: criação inicial do esquema.
+- `FixItemPedidoMappings`: ajuste do mapeamento de `ItemPedido` (remoção de ambiguidade de relacionamento e criação do índice composto único `PedidoId + ProdutoId`, mantendo fidelidade ao MER no N:N entre Pedido e Produto).
+
+Na API, o contexto é registrado no `ClothingStore.API/Program.cs` com `AddDbContext<ClothingStoreContext>()` e `UseNpgsql`, utilizando a connection string `Postgres`.
+
+### Como reproduzir no ambiente local
+1. Configurar `ConnectionStrings:Postgres` via User Secrets (ou variável de ambiente).
+2. Executar a atualização do banco:
+
+```bash
+dotnet ef database update --project ClothingStore.Infrastructure/ClothingStore.Infrastructure.csproj --startup-project ClothingStore.API/ClothingStore.API.csproj
+```
 
 ---
 
