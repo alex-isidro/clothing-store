@@ -1,4 +1,4 @@
-# CP2 - Modelo Entidade-Relacionamento (MER) e Estrutura Inicial da WebAPI
+# CP1 e CP2 - Modelo Entidade-Relacionamento (MER) e WebAPI
 
 ## Integrantes do Grupo
 - **Alexander Dennis Isidro** - **RM565554**
@@ -185,6 +185,8 @@ dotnet user-secrets --project ClothingStore.API/ClothingStore.API.csproj set "Co
 ```bash
 dotnet ef database update --project ClothingStore.Infrastructure/ClothingStore.Infrastructure.csproj --startup-project ClothingStore.API/ClothingStore.API.csproj
 ```
+
+4. Evidências do esquema físico (banco) disponíveis em `docs/banco/diagrama.png` e `docs/banco/tabelas.png`.
 
 ---
 
