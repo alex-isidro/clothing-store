@@ -1,4 +1,4 @@
-# CP1 e CP2 - Modelo Entidade-Relacionamento (MER) e WebAPI
+# Modelo Entidade-Relacionamento (MER) e WebAPI
 
 ## Integrantes do Grupo
 - **Alexander Dennis Isidro** - **RM565554**
