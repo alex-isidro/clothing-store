@@ -1,4 +1,5 @@
-﻿using ClothingStore.Domain.Commom;
+using ClothingStore.Domain.Commom;
+using ClothingStore.Domain.Exceptions;
 
 namespace ClothingStore.Domain.Entities;
 
@@ -10,23 +11,29 @@ public class Pagamento : BaseEntity
     public decimal Valor { get; private set; }
     public DateTime DataPagamento { get; private set; }
 
+    protected Pagamento()
+    {
+        TipoPagamento = string.Empty;
+        StatusPagamento = string.Empty;
+    }
+
     public Pagamento(Guid pedidoId, string tipoPagamento, string statusPagamento, decimal valor, DateTime dataPagamento)
     {
         if (pedidoId == Guid.Empty)
-            throw new Exception("PedidoId não pode ser vazio.");
+            throw new DomainException("PedidoId não pode ser vazio.");
 
         if (string.IsNullOrWhiteSpace(tipoPagamento))
-            throw new Exception("Tipo de pagamento não pode ser vazio.");
+            throw new DomainException("Tipo de pagamento não pode ser vazio.");
 
         if (string.IsNullOrWhiteSpace(statusPagamento))
-            throw new Exception("Status do pagamento não pode ser vazio.");
+            throw new DomainException("Status do pagamento não pode ser vazio.");
 
         if (valor < 0)
-            throw new Exception("Valor não pode ser negativo.");
+            throw new DomainException("Valor não pode ser negativo.");
 
         PedidoId = pedidoId;
-        TipoPagamento = tipoPagamento;
-        StatusPagamento = statusPagamento;
+        TipoPagamento = tipoPagamento.Trim();
+        StatusPagamento = statusPagamento.Trim();
         Valor = valor;
         DataPagamento = dataPagamento;
     }

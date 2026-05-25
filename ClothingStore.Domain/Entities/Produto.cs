@@ -1,4 +1,5 @@
-﻿using ClothingStore.Domain.Commom;
+using ClothingStore.Domain.Commom;
+using ClothingStore.Domain.Exceptions;
 
 namespace ClothingStore.Domain.Entities;
 
@@ -11,41 +12,49 @@ public class Produto : BaseEntity
     public decimal Preco { get; private set; }
     public string Tamanho { get; private set; }
     public string Cor { get; private set; }
-    
-    public Estoque? Estoque { get; private set; }
 
-    public List<ItemPedido> ItensPedido { get; private set; } = new();
+    public Estoque? Estoque { get; private set; }
+    public List<ItemPedido> ItensPedido { get; private set; }
+
+    protected Produto()
+    {
+        Nome = string.Empty;
+        Descricao = string.Empty;
+        Tamanho = string.Empty;
+        Cor = string.Empty;
+        ItensPedido = new List<ItemPedido>();
+    }
 
     public Produto(Guid marcaId, Guid categoriaId, string nome, string descricao, decimal preco, string tamanho, string cor)
     {
         if (marcaId == Guid.Empty)
-            throw new Exception("MarcaId não pode ser vazio.");
+            throw new DomainException("MarcaId não pode ser vazio.");
 
         if (categoriaId == Guid.Empty)
-            throw new Exception("CategoriaId não pode ser vazio.");
+            throw new DomainException("CategoriaId não pode ser vazio.");
 
         if (string.IsNullOrWhiteSpace(nome))
-            throw new Exception("Nome não pode ser vazio.");
+            throw new DomainException("Nome não pode ser vazio.");
 
         if (string.IsNullOrWhiteSpace(descricao))
-            throw new Exception("Descrição não pode ser vazia.");
+            throw new DomainException("Descrição não pode ser vazia.");
 
         if (preco < 0)
-            throw new Exception("Preço não pode ser negativo.");
+            throw new DomainException("Preço não pode ser negativo.");
 
         if (string.IsNullOrWhiteSpace(tamanho))
-            throw new Exception("Tamanho não pode ser vazio.");
+            throw new DomainException("Tamanho não pode ser vazio.");
 
         if (string.IsNullOrWhiteSpace(cor))
-            throw new Exception("Cor não pode ser vazia.");
+            throw new DomainException("Cor não pode ser vazia.");
 
         MarcaId = marcaId;
         CategoriaId = categoriaId;
-        Nome = nome;
-        Descricao = descricao;
+        Nome = nome.Trim();
+        Descricao = descricao.Trim();
         Preco = preco;
-        Tamanho = tamanho;
-        Cor = cor;
+        Tamanho = tamanho.Trim();
+        Cor = cor.Trim();
         ItensPedido = new List<ItemPedido>();
     }
 }
