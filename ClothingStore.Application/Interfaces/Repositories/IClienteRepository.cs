@@ -2,7 +2,7 @@ using ClothingStore.Domain.Entities;
 
 namespace ClothingStore.Application.Interfaces.Repositories;
 
-public interface IClienteRepository : IGenericRepository<Cliente>
+public interface IClienteRepository : IRepository<Cliente>
 {
     Task<Cliente?> GetByEmailAsync(string email);
     Task<Cliente?> GetByCpfAsync(string cpf);

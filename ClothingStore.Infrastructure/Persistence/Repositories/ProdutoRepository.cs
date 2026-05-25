@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ClothingStore.Infrastructure.Persistence.Repositories;
 
-public class ProdutoRepository : GenericRepository<Produto>, IProdutoRepository
+public class ProdutoRepository : Repository<Produto>, IProdutoRepository
 {
     public ProdutoRepository(ClothingStoreContext context) : base(context)
     {
