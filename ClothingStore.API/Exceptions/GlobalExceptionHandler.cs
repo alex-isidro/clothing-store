@@ -20,7 +20,14 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
         Exception exception,
         CancellationToken cancellationToken)
     {
-        _logger.LogError(exception, "Erro não tratado na requisição {Method} {Path}.", httpContext.Request.Method, httpContext.Request.Path);
+        var traceId = System.Diagnostics.Activity.Current?.Id ?? httpContext.TraceIdentifier;
+
+        _logger.LogError(
+            exception,
+            "Erro não tratado na requisição {Method} {Path}. {TraceId}",
+            httpContext.Request.Method,
+            httpContext.Request.Path,
+            traceId);
 
         var (statusCode, title, detail) = exception switch
         {
@@ -42,7 +49,10 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
             Instance = httpContext.Request.Path
         };
 
-        problemDetails.Extensions["traceId"] = httpContext.TraceIdentifier;
+        if (_environment.IsDevelopment())
+        {
+            problemDetails.Extensions["traceId"] = traceId;
+        }
 
         httpContext.Response.StatusCode = statusCode;
         httpContext.Response.ContentType = "application/problem+json";

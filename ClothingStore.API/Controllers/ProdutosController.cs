@@ -1,5 +1,6 @@
 using ClothingStore.Application.DTOs.Produtos;
 using ClothingStore.Application.Interfaces.Repositories;
+using ClothingStore.Application.Interfaces.Services;
 using ClothingStore.Domain.Entities;
 using ClothingStore.Domain.Exceptions;
 using Microsoft.AspNetCore.Mvc;
@@ -15,17 +16,17 @@ namespace ClothingStore.API.Controllers;
 public class ProdutosController : ControllerBase
 {
     private readonly IProdutoRepository _produtoRepository;
-    private readonly IRepository<Categoria> _categoriaRepository;
-    private readonly IRepository<Marca> _marcaRepository;
+    private readonly IProdutoService _service;
+    private readonly ILogger<ProdutosController> _logger;
 
     public ProdutosController(
         IProdutoRepository produtoRepository,
-        IRepository<Categoria> categoriaRepository,
-        IRepository<Marca> marcaRepository)
+        IProdutoService service,
+        ILogger<ProdutosController> logger)
     {
         _produtoRepository = produtoRepository;
-        _categoriaRepository = categoriaRepository;
-        _marcaRepository = marcaRepository;
+        _service = service;
+        _logger = logger;
     }
 
     /// <summary>
@@ -89,28 +90,22 @@ public class ProdutosController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<ProdutoResponse>> Create([FromBody] ProdutoRequest request, CancellationToken cancellationToken)
     {
-        if (!await _marcaRepository.ExistsAsync(request.MarcaId, cancellationToken))
-        {
-            throw new ResourceNotFoundException("Marca", request.MarcaId);
-        }
+        var traceId = HttpContext.TraceIdentifier;
 
-        if (!await _categoriaRepository.ExistsAsync(request.CategoriaId, cancellationToken))
-        {
-            throw new ResourceNotFoundException("Categoria", request.CategoriaId);
-        }
-
-        var produto = new Produto(
+        _logger.LogInformation(
+            "Iniciando criação de produto. {MarcaId} {CategoriaId} {Nome} {TraceId}",
             request.MarcaId,
             request.CategoriaId,
             request.Nome,
-            request.Descricao,
-            request.Preco,
-            request.Tamanho,
-            request.Cor);
+            traceId);
 
-        await _produtoRepository.AddAsync(produto, cancellationToken);
+        var response = await _service.CreateAsync(request, cancellationToken);
 
-        var response = ProdutoResponse.FromEntity(produto);
+        _logger.LogInformation(
+            "Produto criado com sucesso. {ProdutoId} {TraceId}",
+            response.Id,
+            traceId);
+
         return CreatedAtAction(nameof(GetById), new { id = response.Id }, response);
     }
 }
