@@ -698,3 +698,12 @@ indica quais evidências devem ser registradas:
 - [x] Application verifica `Times.Once` no caminho feliz.
 - [x] `dotnet test` documentado.
 - [x] Migrations, `DbContext`, controllers, DTOs, Swagger e `GlobalExceptionHandler` do CP3 preservados.
+
+---
+
+## 👥 Integrantes da Equipe
+
+| Nome | RM | Turma | GitHub | LinkedIn |
+|---|---|---|---|---|
+| **Alexander Dennis Isidro Mamani** | 565554 | 2TDSPG | [alex-isidro](https://github.com/alex-isidro) | [LinkedIn](https://www.linkedin.com/in/alexander-dennis-a3b48824b/) |
+| **Kelson Zhang** | 563748 | 2TDSPG | [KelsonZh0](https://github.com/KelsonZh0) | [LinkedIn](https://www.linkedin.com/in/kelson-zhang-211456323/) |
