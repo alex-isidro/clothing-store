@@ -39,8 +39,8 @@ public class Produto : BaseEntity
         if (string.IsNullOrWhiteSpace(descricao))
             throw new DomainException("Descrição não pode ser vazia.");
 
-        if (preco < 0)
-            throw new DomainException("Preço não pode ser negativo.");
+        if (preco <= 0)
+            throw new DomainException("Preço deve ser maior que zero.");
 
         if (string.IsNullOrWhiteSpace(tamanho))
             throw new DomainException("Tamanho não pode ser vazio.");

@@ -34,7 +34,8 @@ public class ProdutoTests
     [InlineData(-0.01)]
     [InlineData(-1)]
     [InlineData(-100)]
-    public void Produto_ComPrecoNegativo_DeveLancarDomainException(double preco)
+    [InlineData(0)]
+    public void Produto_ComPrecoMenorOuIgualAZero_DeveLancarDomainException(double preco)
     {
         // Arrange
         var marcaId = Guid.NewGuid();
@@ -52,6 +53,27 @@ public class ProdutoTests
 
         // Assert
         var ex = Assert.Throws<DomainException>(act);
-        Assert.Equal("Preço não pode ser negativo.", ex.Message);
+        Assert.Equal("Preço deve ser maior que zero.", ex.Message);
+    }
+    
+    [Fact]
+    public void Produto_ComPrecoMinimoValido_DeveCriarProduto()
+    {
+        // Arrange
+        var marcaId = Guid.NewGuid();
+        var categoriaId = Guid.NewGuid();
+
+        // Act
+        var produto = new Produto(
+            marcaId,
+            categoriaId,
+            "Camiseta Básica",
+            "Camiseta de algodão",
+            0.01m,
+            "M",
+            "Preta");
+
+        // Assert
+        Assert.Equal(0.01m, produto.Preco);
     }
 }

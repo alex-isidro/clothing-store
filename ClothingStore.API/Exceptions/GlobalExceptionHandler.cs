@@ -20,7 +20,7 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
         Exception exception,
         CancellationToken cancellationToken)
     {
-        var traceId = System.Diagnostics.Activity.Current?.Id ?? httpContext.TraceIdentifier;
+        var traceId = httpContext.TraceIdentifier;
 
         _logger.LogError(
             exception,
@@ -36,7 +36,6 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
             ConflictException => (StatusCodes.Status409Conflict, "Conflito de dados", exception.Message),
             DomainException => (StatusCodes.Status400BadRequest, "Erro de domínio", exception.Message),
             KeyNotFoundException => (StatusCodes.Status404NotFound, "Recurso não encontrado", exception.Message),
-            InvalidOperationException => (StatusCodes.Status400BadRequest, "Operação inválida", exception.Message),
             _ => (StatusCodes.Status500InternalServerError, "Erro interno no servidor", GetInternalServerErrorDetail(exception))
         };
 
