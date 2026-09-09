@@ -1,6 +1,6 @@
-# Clothing Store API - CP3 .NET
+# Clothing Store API - CP4 .NET
 
-Projeto acadêmico desenvolvido para o CP3 da disciplina de .NET, evoluindo a entrega do CP2 para uma API REST documentada, com Clean Architecture, Entity Framework Core, repositório genérico e tratamento global de exceções.
+Projeto acadêmico desenvolvido para o CP4 da disciplina de .NET, evoluindo a entrega do CP3 com **Health Checks**, **logs estruturados com `traceId`** e **testes automatizados com xUnit e Moq**, mantendo a Clean Architecture, Entity Framework Core, PostgreSQL, repositório genérico e tratamento global de exceções.
 
 ---
 
@@ -45,7 +45,9 @@ clothing-store/
 |-- ClothingStore.Application/
 |   |-- DTOs/
 |   |-- Interfaces/
-|       |-- Repositories/
+|   |   |-- Repositories/
+|   |   `-- Services/
+|   `-- Services/
 |
 |-- ClothingStore.Domain/
 |   |-- Commom/
@@ -343,14 +345,7 @@ Registro no `Program.cs`:
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 ```
 
-Uso demonstrado nos controllers, por exemplo:
-
-```txt
-CategoriasController -> IRepository<Categoria>
-MarcasController     -> IRepository<Marca>
-ProdutosController   -> IRepository<Categoria> e IRepository<Marca>
-PedidosController    -> IRepository<Endereco>
-```
+O contrato continua disponível para os fluxos que precisam de operações genéricas. No CP4, a criação de produtos foi movida para `ProdutoService`, que recebe as interfaces de repositório pela Application, mantendo o controller focado na camada HTTP.
 
 Os repositórios específicos continuam existindo para consultas mais próprias do domínio:
 
@@ -430,26 +425,276 @@ docs/cp3-testes.md
 
 ---
 
-## Checklist CP3
-
-- [x] API REST criada com controllers.
-- [x] Pelo menos 3 recursos expostos via HTTP.
-- [x] DTOs de request/response criados.
-- [x] Controllers não injetam `DbContext` diretamente.
-- [x] Clean Architecture mantida.
-- [x] `IRepository<T>` criado na Application.
-- [x] `Repository<T>` criado na Infrastructure.
-- [x] Repositório genérico registrado na DI.
-- [x] Repositório genérico usado em fluxo real.
-- [x] Swagger configurado com título, versão e descrição.
-- [x] XML comments habilitados.
-- [x] Actions documentadas com `ProducesResponseType`.
-- [x] `GlobalExceptionHandler` implementado com `IExceptionHandler`.
-- [x] Erros retornam `ProblemDetails`.
-- [x] README atualizado com instruções de execução.
 
 ---
 
-## Observação
+# CP4 — Health Checks, Observabilidade e Testes
 
-Este CP3 evolui a estrutura do CP2. As migrations, o `DbContext`, os mapeamentos e as entidades do domínio foram mantidos.
+O CP4 evolui a mesma solução do CP3. As migrations, o `DbContext`, os controllers, os DTOs, o `IRepository<T>` e o `GlobalExceptionHandler` foram mantidos.
+
+## 1. Health Check
+
+A API expõe **somente `GET /health`** para verificar a disponibilidade operacional.
+
+Foram registrados dois checks:
+
+| Check | Função | Status |
+|---|---|---|
+| `self` | Confirma que o processo da API está em execução. | `Healthy` |
+| `database` | Verifica a conectividade do `ClothingStoreContext` com o PostgreSQL. | `Healthy` / `Unhealthy` |
+
+A implementação segue a abordagem **A** do enunciado: `AddDbContextCheck<ClothingStoreContext>()`, usando o pacote `Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore`.
+
+A resposta de `/health` é JSON e contém:
+
+- `status` geral;
+- `duration` da execução;
+- lista de `checks`;
+- nome e status de cada check;
+- duração de cada check;
+- mensagem da exceção somente em **Development**.
+
+Os códigos HTTP são:
+
+```txt
+Healthy   -> 200
+Degraded  -> 200
+Unhealthy -> 503
+```
+
+Exemplo de chamada:
+
+```http
+GET /health
+```
+
+Exemplo de estrutura da resposta:
+
+```json
+{
+  "status": "Healthy",
+  "duration": "00:00:00.1234567",
+  "checks": [
+    {
+      "name": "self",
+      "status": "Healthy",
+      "description": "API em execução.",
+      "duration": "00:00:00.0001234",
+      "error": null
+    },
+    {
+      "name": "database",
+      "status": "Healthy",
+      "description": null,
+      "duration": "00:00:00.0987654",
+      "error": null
+    }
+  ]
+}
+```
+
+### Validação de falha do banco
+
+Com a API em execução e PostgreSQL disponível:
+
+```txt
+GET /health -> HTTP 200
+```
+
+Para simular a indisponibilidade do banco em ambiente local, pare o PostgreSQL ou configure uma connection string inválida sem commitar credenciais:
+
+```txt
+GET /health -> HTTP 503
+```
+
+O detalhe da exceção do banco não deve ser exposto em produção.
+
+A implementação foi separada em:
+
+```txt
+ClothingStore.API/Health/HealthCheckResponseWriter.cs
+ClothingStore.API/Extensions/ClothingStoreServiceCollectionExtensions.cs
+```
+
+---
+
+## 2. Observabilidade e logs
+
+O projeto utiliza `ILogger<T>` nativo do ASP.NET Core.
+
+O fluxo de criação de produto (`POST /api/produtos`) possui:
+
+1. log de início da operação;
+2. log de sucesso;
+3. propriedades nomeadas;
+4. `traceId` da requisição.
+
+Exemplo conceitual do log:
+
+```txt
+Iniciando criação de produto. MarcaId CategoriaId Nome TraceId
+Produto criado com sucesso. ProdutoId TraceId
+```
+
+O `GlobalExceptionHandler` também registra exceções em nível `Error`, incluindo:
+
+```txt
+Method
+Path
+TraceId
+Exception
+```
+
+O `traceId` é incluído no `ProblemDetails.Extensions` somente em Development. Em Production, detalhes internos e stack trace não são expostos na resposta HTTP.
+
+O handler continua centralizando o mapeamento das exceções do CP3.
+
+---
+
+## 3. Serviço de aplicação
+
+Para manter a responsabilidade de negócio fora do controller, o fluxo de criação de produto foi organizado na camada Application:
+
+```txt
+ClothingStore.Application
+|-- Interfaces/Services/IProdutoService.cs
+`-- Services/ProdutoService.cs
+```
+
+O `ProdutoService` recebe as interfaces de repositório por injeção de dependência e verifica:
+
+- existência da marca;
+- existência da categoria;
+- criação da entidade `Produto`;
+- persistência pelo `IProdutoRepository`.
+
+O controller permanece responsável pela camada HTTP e pelos logs da requisição.
+
+Registro na DI:
+
+```csharp
+services.AddScoped<IProdutoService, ProdutoService>();
+```
+
+---
+
+## 4. Testes automatizados
+
+A solution possui dois projetos de teste:
+
+```txt
+ClothingStore.Domain.Tests
+ClothingStore.Application.Tests
+```
+
+### Domain Tests
+
+O projeto referencia **somente** `ClothingStore.Domain`.
+
+Arquivo principal:
+
+```txt
+ClothingStore.Domain.Tests/ProdutoTests.cs
+```
+
+Cobertura:
+
+- `[Fact]` para criação de produto com dados válidos;
+- `[Theory]` + `[InlineData]` para preços negativos;
+- validação da `DomainException`;
+- padrão AAA: Arrange / Act / Assert.
+
+### Application Tests
+
+O projeto referencia `ClothingStore.Application` e usa **Moq** para simular os repositórios.
+
+Arquivo principal:
+
+```txt
+ClothingStore.Application.Tests/Services/ProdutoServiceTests.cs
+```
+
+Cenários:
+
+- categoria inexistente → `ResourceNotFoundException`;
+- quando a categoria não existe, `IProdutoRepository.AddAsync` **não é chamado** (`Times.Never`);
+- criação válida → `AddAsync` chamado uma vez (`Times.Once`).
+
+Não são usados:
+
+- banco real nos testes;
+- `DbContext` nos testes de Application;
+- `WebApplicationFactory`;
+- testes de controller para substituir os testes exigidos de Domain/Application.
+
+### Executar os testes
+
+A partir da raiz da solução:
+
+```bash
+dotnet test
+```
+
+O comando deve terminar com todos os testes passando.
+
+---
+
+## 5. URLs
+
+Com a API executando localmente:
+
+```txt
+Swagger:
+https://localhost:<porta>/swagger
+
+Health:
+https://localhost:<porta>/health
+```
+
+O endpoint `/health` não é um endpoint de negócio e não precisa aparecer no Swagger.
+
+---
+
+## 6. Evidências
+
+As evidências do CP4 devem ser armazenadas em:
+
+```txt
+docs/
+```
+
+O arquivo:
+
+```txt
+docs/cp4-evidencias.md
+```
+
+indica quais evidências devem ser registradas:
+
+- `/health` com API e banco saudáveis;
+- `/health` com banco indisponível;
+- log de `POST /api/produtos` contendo `traceId`;
+- exceção tratada pelo `GlobalExceptionHandler`;
+- saída do `dotnet test`.
+
+---
+
+## Checklist CP4
+
+- [x] `AddHealthChecks()` registrado na API.
+- [x] Check `self` implementado.
+- [x] Check do PostgreSQL via `AddDbContextCheck<ClothingStoreContext>()`.
+- [x] `GET /health` com relatório JSON.
+- [x] `Healthy -> 200`, `Degraded -> 200`, `Unhealthy -> 503`.
+- [x] Exceção do health check exibida somente em Development.
+- [x] Logs estruturados com `ILogger<T>`.
+- [x] `traceId` no fluxo de criação de produto.
+- [x] `GlobalExceptionHandler` registra exceções com `traceId`.
+- [x] `traceId` em `ProblemDetails.Extensions` em Development.
+- [x] `ClothingStore.Domain.Tests` criado sem referência à Infrastructure/API.
+- [x] Domain com `[Fact]` e `[Theory]` + `[InlineData]`.
+- [x] `ClothingStore.Application.Tests` criado com Moq.
+- [x] Application verifica `Times.Never` no caminho de erro.
+- [x] Application verifica `Times.Once` no caminho feliz.
+- [x] `dotnet test` documentado.
+- [x] Migrations, `DbContext`, controllers, DTOs, Swagger e `GlobalExceptionHandler` do CP3 preservados.
