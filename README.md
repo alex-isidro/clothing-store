@@ -83,10 +83,9 @@ clothing-store/
 |
 |-- ClothingStore.Domain.Tests/                 # Testes unitários do Domínio (xUnit)
 |-- ClothingStore.Application.Tests/            # Testes unitários da Aplicação (xUnit + Moq)
-|-- docs/                                       # Evidências do CP4 e CP5, MER, etc.
-|   |-- cp5-evidencias.md
-|   |-- cp4-evidencias.md
-|   `-- mer.pdf
+|-- docs/                                       # Evidências do CP5 e banco de dados
+|   |-- CP5-evidencias.pdf
+|   `-- banco/
 `-- clothing store.sln
 ```
 
@@ -128,8 +127,8 @@ dotnet run --project ClothingStore.API/ClothingStore.API.csproj
 
 | Endpoint | Descrição |
 |---|---|
-| `https://localhost:<porta>/swagger` | Swagger UI com seletor de versões (`v1.0` deprecada e `v2.0` ativa) |
-| `https://localhost:<porta>/health` | Health Check (não sujeito a rate limit) |
+| `http://localhost:5092/swagger` | Swagger UI com seletor de versões (`v1.0` deprecada e `v2.0` ativa) |
+| `http://localhost:5092/health` | Health Check (não sujeito a rate limit) |
 | `GET /api/produtos` | Listagem **v2** padrão (envelope paginado) |
 | `GET /api/produtos?api-version=1.0` | Listagem **v1** deprecada (array / lista plana) |
 | `GET /api/produtos` com header `X-Api-Version: 1.0` | Listagem **v1** deprecada via header |
@@ -186,7 +185,7 @@ api-deprecated-versions: 1.0
 ```
 
 ### Swagger Multi-versão:
-Em ambiente de desenvolvimento, o Swagger UI possui um dropdown no canto superior direito para alternar entre:
+Em ambiente de desenvolvimento, o Swagger UI (acessível em `http://localhost:5092/swagger`) possui um dropdown no canto superior direito para alternar entre:
 - **`Clothing Store API v1.0`**: Exibe a v1 explicitamente marcada com *"Esta versão está deprecada. Use a versão 2.0."*.
 - **`Clothing Store API v2.0`**: Exibe a v2 como versão atual.
 
@@ -265,7 +264,7 @@ GET /api/produtos?pageSize=9999
 - **Application (`ProdutoService`, `PagedResponse<T>`, `PaginationQuery`):** Centraliza os DTOs do envelope e orquestra a chamada.
 - **Infrastructure (`Repository<T>`):** Executa a paginação no banco via LINQ/EF Core:
   ```csharp
-  var query = _dbSet.AsNoTracking().Where(entity => entity.Active);
+  var query = _dbSet.AsNoTracking();
   var totalItems = await query.CountAsync(cancellationToken);
   var items = await query
       .OrderBy(entity => entity.CreatedAt)
@@ -426,13 +425,13 @@ dotnet test
 As evidências de execução e validação do CP5 estão documentadas em:
 
 ```txt
-docs/cp5-evidencias.md
+docs/CP5-evidencias.pdf
 ```
 
-Itens contemplados:
-1. Resposta `GET /api/produtos?api-version=1.0` (array v1) com headers `api-supported-versions` e `api-deprecated-versions`.
+Itens contemplados no documento:
+1. Resposta `GET /api/produtos?api-version=1.0` (array v1) com headers `api-supported-versions` e `api-deprecated-versions` explícitos.
 2. Resposta `GET /api/produtos` (envelope v2).
-3. Resposta com paginação página 1 e página 2 demonstrando não-sobreposição.
+3. Demonstração de listagem com paginação.
 4. Respostas de erro HTTP 400 para `page=0` e `pageSize=9999`.
 5. Estouro do rate limit com HTTP 429, header `Retry-After: 60` e JSON de rejeição.
 6. `GET /health` respondendo HTTP 200 imediatamente após o estouro do rate limit.
@@ -458,5 +457,5 @@ Itens contemplados:
 - [x] **`GET /health`** permanece de fora do rate limit e continua respondendo HTTP 200.
 - [x] Swagger configurado com múltiplos documentos (v1 marcada como deprecada, v2 como ativa).
 - [x] Testes unitários com xUnit e Moq cobrindo domínio, aplicação e regras de paginação.
-- [x] README e documentação de evidências em `docs/cp5-evidencias.md` atualizados.
+- [x] README e documentação de evidências em `docs/CP5-evidencias.pdf` atualizados.
 - [x] Arquitetura Clean Architecture e entregas dos CPs 1, 2, 3 e 4 preservadas.
