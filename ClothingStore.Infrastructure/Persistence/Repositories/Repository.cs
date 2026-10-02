@@ -26,7 +26,28 @@ public class Repository<T> : IRepository<T> where T : BaseEntity
     {
         return await _dbSet
             .AsNoTracking()
+            .OrderBy(entity => entity.CreatedAt)
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<(IReadOnlyList<T> Items, int TotalItems)> GetPagedAsync(
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+       
+        var query = _dbSet
+            .AsNoTracking();
+
+        var totalItems = await query.CountAsync(cancellationToken);
+
+        var items = await query
+            .OrderBy(entity => entity.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return (items, totalItems);
     }
 
     public async Task AddAsync(T entity, CancellationToken cancellationToken = default)

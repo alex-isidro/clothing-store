@@ -1,13 +1,15 @@
-# Clothing Store API - CP4 .NET
+# Clothing Store API — CP5 .NET
 
-Projeto acadêmico desenvolvido para o CP4 da disciplina de .NET, evoluindo a entrega do CP3 com **Health Checks**, **logs estruturados com `traceId`** e **testes automatizados com xUnit e Moq**, mantendo a Clean Architecture, Entity Framework Core, PostgreSQL, repositório genérico e tratamento global de exceções.
+Projeto acadêmico desenvolvido para o **CP5** da disciplina de **.NET**, evoluindo a solução dos CPs anteriores com **Versionamento de API** (convivência de contratos v1 deprecado e v2 ativo), **Paginação cortada no banco via `IQueryable`** e **Rate Limit nativo com Fixed Window**, preservando integralmente a Clean Architecture, Entity Framework Core, PostgreSQL, Health Checks (`GET /health`), logs estruturados com `traceId`, tratamento global de exceções (RFC 7807) e testes automatizados com xUnit e Moq.
 
 ---
 
 ## Integrantes do Grupo
 
-- **Alexander Dennis Isidro** - **RM565554**
-- **Kelson Zhang** - **RM563748**
+| Nome | RM | Turma | GitHub | LinkedIn |
+|---|---|---|---|---|
+| **Alexander Dennis Isidro Mamani** | **565554** | 2TDSPG | [alex-isidro](https://github.com/alex-isidro) | [LinkedIn](https://www.linkedin.com/in/alexander-dennis-a3b48824b/) |
+| **Kelson Zhang** | **563748** | 2TDSPG | [KelsonZh0](https://github.com/KelsonZh0) | [LinkedIn](https://www.linkedin.com/in/kelson-zhang-211456323/) |
 
 ---
 
@@ -15,111 +17,92 @@ Projeto acadêmico desenvolvido para o CP4 da disciplina de .NET, evoluindo a en
 
 **Loja de Roupas (Clothing Store)**
 
-O sistema representa a base de uma loja de roupas, permitindo modelar e consultar clientes, produtos, categorias, marcas, pedidos, pagamentos, endereços e estoque.
+O sistema modela e gerencia o catálogo e operações de uma loja de vestuário, contemplando clientes, endereços, marcas, categorias, produtos, pedidos, itens de pedido, estoque e pagamentos.
 
 ---
 
-## Tecnologias Utilizadas
+## Tecnologias e Pacotes Utilizados
 
-- C#
-- .NET 10
-- ASP.NET Core Web API
-- Entity Framework Core
-- PostgreSQL
-- Swagger / OpenAPI com Swashbuckle
-- Clean Architecture
-- GUID como chave primária
+- **.NET 10** / C#
+- **ASP.NET Core Web API**
+- **Asp.Versioning.Mvc** e **Asp.Versioning.Mvc.ApiExplorer** (Versionamento de API)
+- **Microsoft.AspNetCore.RateLimiting** (Rate Limiting nativo do ASP.NET Core)
+- **Entity Framework Core 10** & **Npgsql.EntityFrameworkCore.PostgreSQL**
+- **Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore**
+- **Swashbuckle.AspNetCore** (Swagger / OpenAPI com suporte a múltiplas versões)
+- **xUnit** & **Moq** (Testes de unidade em Domain e Application)
+- **Clean Architecture** e GUID como chave primária
 
 ---
 
-## Estrutura do Projeto
+## Estrutura da Solução
 
 ```txt
 clothing-store/
-|-- ClothingStore.API/
-|   |-- Controllers/
-|   |-- Exceptions/
-|   |-- Program.cs
-|   |-- appsettings.json
+|-- ClothingStore.API/                          # Camada de apresentação e composição HTTP
+|   |-- Controllers/                            # Controllers versionados e endpoints
+|   |   |-- CategoriasController.cs
+|   |   |-- ClientesController.cs
+|   |   |-- MarcasController.cs
+|   |   |-- PedidosController.cs
+|   |   `-- ProdutosController.cs               # Recurso versionado (v1 e v2) + Rate Limit
+|   |-- Exceptions/                             # GlobalExceptionHandler (RFC 7807)
+|   |-- Extensions/                             # DI, Swagger Multi-versão e Health Checks
+|   |   |-- ClothingStoreServiceCollectionExtensions.cs
+|   |   `-- ConfigureSwaggerOptions.cs          # Configuração dos docs v1 e v2 no Swagger
+|   |-- Health/                                 # HealthCheckResponseWriter
+|   |-- Program.cs                              # Configuração de Versionamento, Rate Limiting, DI
+|   `-- appsettings.json
 |
-|-- ClothingStore.Application/
+|-- ClothingStore.Application/                  # Casos de uso, DTOs e regras de orquestração
 |   |-- DTOs/
+|   |   |-- Categorias/
+|   |   |-- Clientes/
+|   |   |-- Marcas/
+|   |   |-- Pedidos/
+|   |   |-- Produtos/
+|   |   |-- PagedResponse.cs                    # Envelope paginado da v2
+|   |   `-- PaginationQuery.cs                  # Parâmetros de consulta e validação de página
 |   |-- Interfaces/
-|   |   |-- Repositories/
-|   |   `-- Services/
+|   |   |-- Repositories/                       # IRepository<T> com GetPagedAsync
+|   |   `-- Services/                           # IProdutoService
 |   `-- Services/
+|       `-- ProdutoService.cs                   # Compartilhado entre v1 e v2 (sem duplicação de regra)
 |
-|-- ClothingStore.Domain/
-|   |-- Commom/
-|   |-- Entities/
-|   |-- Exceptions/
+|-- ClothingStore.Domain/                       # Entidades puras, regras de negócio e exceções
+|   |-- Commom/                                 # BaseEntity (Id, CreatedAt, Active)
+|   |-- Entities/                               # Cliente, Produto, Pedido, Categoria, Marca, etc.
+|   `-- Exceptions/                             # DomainException, ResourceNotFoundException, etc.
 |
-|-- ClothingStore.Infrastructure/
-|   |-- Persistence/
-|   |   |-- ClothingStoreContext.cs
-|   |   |-- configuration/
-|   |   |-- Repositories/
+|-- ClothingStore.Infrastructure/               # Persistência EF Core e repositórios
 |   |-- Migrations/
+|   `-- Persistence/
+|       |-- ClothingStoreContext.cs
+|       |-- configuration/
+|       `-- Repositories/                       # Repository<T> (Count + OrderBy + Skip + Take no IQueryable)
 |
-|-- docs/
-|   |-- mer.pdf
-|   |-- banco/
-|   |-- cp3-testes.md
-|
-|-- README.md
+|-- ClothingStore.Domain.Tests/                 # Testes unitários do Domínio (xUnit)
+|-- ClothingStore.Application.Tests/            # Testes unitários da Aplicação (xUnit + Moq)
+|-- docs/                                       # Evidências do CP4 e CP5, MER, etc.
+|   |-- cp5-evidencias.md
+|   |-- cp4-evidencias.md
+|   `-- mer.pdf
 `-- clothing store.sln
 ```
 
 ---
 
-## Entidades Modeladas
+## SGBD e Configuração do Banco
 
-- Cliente
-- Endereco
-- Pedido
-- ItemPedido
-- Produto
-- Categoria
-- Marca
-- Pagamento
-- Estoque
+O projeto utiliza **PostgreSQL**. A connection string deve ser informada via **User Secrets** ou variável de ambiente.
 
-Todas as entidades utilizam **GUID** como chave primária.
-
----
-
-## Resumo dos Relacionamentos
-
-| Relacionamento | Cardinalidade | Observação |
-|---|---:|---|
-| Cliente - Endereco | 1:N | Um cliente pode possuir vários endereços. |
-| Cliente - Pedido | 1:N | Um cliente pode realizar vários pedidos. |
-| Endereco - Pedido | 1:N | Um endereço pode ser usado em vários pedidos. |
-| Pedido - ItemPedido | 1:N | Um pedido possui vários itens. |
-| Produto - ItemPedido | 1:N | Um produto pode aparecer em vários itens. |
-| Pedido - Produto | N:N | Resolvido pela entidade associativa ItemPedido. |
-| Categoria - Produto | 1:N | Uma categoria possui vários produtos. |
-| Marca - Produto | 1:N | Uma marca possui vários produtos. |
-| Pedido - Pagamento | 1:1 | Pagamento opcional para o pedido. |
-| Produto - Estoque | 1:1 | Estoque opcional para o produto. |
-
-O diagrama MER está disponível em `docs/mer.pdf`.
-
----
-
-## SGBD Usado
-
-O projeto utiliza **PostgreSQL**, mantendo a persistência criada no CP2 com Entity Framework Core e migrations.
-
-A connection string não deve ser commitada com senha real. Configure via **User Secrets** ou variável de ambiente.
-
-Exemplo com User Secrets:
+Exemplo via User Secrets:
 
 ```bash
 dotnet user-secrets --project ClothingStore.API/ClothingStore.API.csproj set "ConnectionStrings:Postgres" "Host=localhost;Port=5432;Database=clothing_store;Username=postgres;Password=SUA_SENHA"
 ```
 
-Aplicar migrations:
+Aplicar as migrations:
 
 ```bash
 dotnet ef database update --project ClothingStore.Infrastructure/ClothingStore.Infrastructure.csproj --startup-project ClothingStore.API/ClothingStore.API.csproj
@@ -129,36 +112,209 @@ dotnet ef database update --project ClothingStore.Infrastructure/ClothingStore.I
 
 ## Como Executar a API
 
-Na raiz da solução, execute:
+Restaurar dependências:
 
 ```bash
 dotnet restore
 ```
 
-Depois rode a API:
+Executar a aplicação:
 
 ```bash
 dotnet run --project ClothingStore.API/ClothingStore.API.csproj
 ```
 
-Acesse o Swagger em:
+### URLs Principais
 
-```txt
-https://localhost:<porta>/swagger
-```
-
-Também pode aparecer em HTTP, dependendo do perfil de execução local:
-
-```txt
-http://localhost:<porta>/swagger
-```
+| Endpoint | Descrição |
+|---|---|
+| `https://localhost:<porta>/swagger` | Swagger UI com seletor de versões (`v1.0` deprecada e `v2.0` ativa) |
+| `https://localhost:<porta>/health` | Health Check (não sujeito a rate limit) |
+| `GET /api/produtos` | Listagem **v2** padrão (envelope paginado) |
+| `GET /api/produtos?api-version=1.0` | Listagem **v1** deprecada (array / lista plana) |
+| `GET /api/produtos` com header `X-Api-Version: 1.0` | Listagem **v1** deprecada via header |
 
 ---
 
-## Endpoints Expostos no CP3
+# 📌 Implementações do CP5
+
+---
+
+## 1. Versionamento de API (Convivência de Contratos)
+
+O recurso escolhido para versionamento é **`/api/produtos`**.
+
+### Configuração no `Program.cs`:
+- `AddApiVersioning`:
+  - `DefaultApiVersion = new ApiVersion(2.0)`
+  - `AssumeDefaultVersionWhenUnspecified = true` (requisição sem versão cai automaticamente na **2.0**)
+  - `ReportApiVersions = true` (adiciona headers `api-supported-versions` e `api-deprecated-versions` na resposta)
+  - `ApiVersionReader.Combine`: suporta query string `api-version` e header `X-Api-Version`.
+- `AddApiExplorer`:
+  - `GroupNameFormat = "'v'VVVV"` para agrupamento correto no Swagger.
+
+### Contratos Disponíveis no Recurso:
+
+| Versão | Status | Formato do `GET /api/produtos` | Como Chamar |
+|---|---|---|---|
+| **v1.0** | **Deprecada** | Array direto de produtos `[ ... ]` (contrato CP3) | `?api-version=1.0` ou Header `X-Api-Version: 1.0` |
+| **v2.0** | **Atual (Default)** | Envelope paginado `{ "page": 1, "pageSize": 20, "totalItems": ..., "items": [ ... ] }` | Sem versão, `?api-version=2.0` ou Header `X-Api-Version: 2.0` |
+
+### Exemplos de Chamada de Versão:
+
+1. **Via Query String (v1 deprecada):**
+   ```http
+   GET /api/produtos?api-version=1.0
+   ```
+
+2. **Via Header HTTP (v1 deprecada):**
+   ```http
+   GET /api/produtos
+   X-Api-Version: 1.0
+   ```
+
+3. **Omissão de versão (cai automaticamente na v2.0):**
+   ```http
+   GET /api/produtos
+   ```
+
+### Headers de Resposta de Versionamento:
+Em todas as respostas, a API retorna os headers informativos:
+```http
+api-supported-versions: 1.0, 2.0
+api-deprecated-versions: 1.0
+```
+
+### Swagger Multi-versão:
+Em ambiente de desenvolvimento, o Swagger UI possui um dropdown no canto superior direito para alternar entre:
+- **`Clothing Store API v1.0`**: Exibe a v1 explicitamente marcada com *"Esta versão está deprecada. Use a versão 2.0."*.
+- **`Clothing Store API v2.0`**: Exibe a v2 como versão atual.
+
+Os demais controllers (`Categorias`, `Marcas`, `Clientes`, `Pedidos`) permanecem operacionais e acessíveis normalmente.
+
+---
+
+## 2. Paginação Cortada no Banco (v2)
+
+A listagem **v2** de produtos implementa paginação com corte direto no banco de dados via `IQueryable`. A versão **v1** permanece sem paginação para evitar *breaking changes* em clientes legados.
+
+### Parâmetros de Consulta (Query String):
+
+| Parâmetro | Padrão | Tipo / Regra | Comportamento em Caso de Erro |
+|---|---|---|---|
+| `page` | `1` | Inteiro $\ge 1$ | `page < 1` $\rightarrow$ **HTTP 400 Bad Request** |
+| `pageSize` | `20` | Inteiro de **1 a 100** | `pageSize < 1` ou `pageSize > 100` $\rightarrow$ **HTTP 400 Bad Request** |
+
+### Envelope da Resposta v2 (HTTP 200 OK):
+
+```json
+{
+  "items": [
+    {
+      "id": "b3d8c11e-249e-4b67-8977-c6b75c879944",
+      "marcaId": "8f6c483a-4a25-4c07-b648-52fb58f69188",
+      "categoriaId": "2c92e92c-0e78-4bf8-b996-ebdeffb35e07",
+      "nome": "Camiseta Básica",
+      "descricao": "Camiseta de algodão",
+      "preco": 79.90,
+      "tamanho": "M",
+      "cor": "Preta",
+      "ativo": true
+    }
+  ],
+  "page": 1,
+  "pageSize": 20,
+  "totalItems": 45,
+  "totalPages": 3,
+  "hasPrevious": false,
+  "hasNext": true
+}
+```
+
+- `totalPages` é calculado como $\lceil \text{totalItems} / \text{pageSize} \rceil$.
+- Solicitar uma página além do total (ex: `page=999`) retorna **HTTP 200 OK** com `"items": []` e os totais preservados.
+
+### Resposta de Erro de Validação (HTTP 400 Bad Request — Problem Details):
+
+```http
+GET /api/produtos?page=0
+```
+```json
+{
+  "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+  "title": "Parâmetros de paginação inválidos",
+  "status": 400,
+  "detail": "page deve ser maior ou igual a 1."
+}
+```
+
+```http
+GET /api/produtos?pageSize=9999
+```
+```json
+{
+  "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+  "title": "Parâmetros de paginação inválidos",
+  "status": 400,
+  "detail": "pageSize deve estar entre 1 e 100."
+}
+```
+
+### Arquitetura da Paginação:
+- **Controller (`ProdutosController`):** Recebe `PaginationQuery`, valida o intervalo e invoca o serviço de aplicação.
+- **Application (`ProdutoService`, `PagedResponse<T>`, `PaginationQuery`):** Centraliza os DTOs do envelope e orquestra a chamada.
+- **Infrastructure (`Repository<T>`):** Executa a paginação no banco via LINQ/EF Core:
+  ```csharp
+  var query = _dbSet.AsNoTracking().Where(entity => entity.Active);
+  var totalItems = await query.CountAsync(cancellationToken);
+  var items = await query
+      .OrderBy(entity => entity.CreatedAt)
+      .Skip((page - 1) * pageSize)
+      .Take(pageSize)
+      .ToListAsync(cancellationToken);
+  ```
+  A ordenação estável (`OrderBy(entity => entity.CreatedAt)`) garante reprodutibilidade entre páginas sem sobreposição.
+
+---
+
+## 3. Rate Limiting (Teto de Frequência)
+
+A API utiliza o middleware nativo do ASP.NET Core (`Microsoft.AspNetCore.RateLimiting`) para proteção contra requisições excessivas.
+
+### Política Configurada:
+- **Nome da Política:** `produtos-write`
+- **Algoritmo:** **Fixed Window** (`AddFixedWindowLimiter`)
+- **Janela de Tempo:** **1 minuto** (`TimeSpan.FromMinutes(1)`)
+- **Limite de Permissões (`PermitLimit`):** **10 requisições**
+- **Fila (`QueueLimit`):** `0` (rejeição imediata ao exceder)
+- **Endpoint Aplicado:** `POST /api/produtos` (via atributo `[EnableRateLimiting("produtos-write")]`)
+
+### Resposta ao Exceder o Limite (HTTP 429 Too Many Requests):
+
+Quando um cliente dispara mais de 10 requisições no intervalo de 1 minuto no endpoint de escrita de produtos, a API rejeita com status **429**, envia o header **`Retry-After`** e um corpo JSON explicativo:
+
+```http
+HTTP/1.1 429 Too Many Requests
+Content-Type: application/json
+Retry-After: 60
+```
+
+```json
+{
+  "title": "Too Many Requests",
+  "status": 429,
+  "detail": "Limite de 10 requisições por minuto excedido para este endpoint."
+}
+```
+
+### Isolamento do Health Check:
+O endpoint **`GET /health`** **não** possui limitação de taxa e permanece fora do rate limiter. Mesmo após estourar as 10 requisições do `POST /api/produtos`, chamadas para `/health` continuam respondendo **HTTP 200 OK** imediatamente.
+
+---
+
+## Endpoints Gerais da API
 
 ### Categorias
-
 ```txt
 GET  /api/categorias
 GET  /api/categorias/{id}
@@ -166,23 +322,22 @@ POST /api/categorias
 ```
 
 ### Marcas
-
 ```txt
 GET  /api/marcas
 GET  /api/marcas/{id}
 POST /api/marcas
 ```
 
-### Produtos
-
+### Produtos (Recurso Versionado e Limitado)
 ```txt
-GET  /api/produtos
-GET  /api/produtos/{id}
-POST /api/produtos
+GET  /api/produtos?api-version=1.0          # v1 deprecada (array)
+GET  /api/produtos                          # v2 atual (envelope paginado)
+GET  /api/produtos?page=1&pageSize=20       # v2 com parâmetros
+GET  /api/produtos/{id}                     # v1 e v2
+POST /api/produtos                          # v2 com Rate Limit (10 req/min)
 ```
 
 ### Clientes
-
 ```txt
 GET  /api/clientes
 GET  /api/clientes/{id}
@@ -190,7 +345,6 @@ POST /api/clientes
 ```
 
 ### Pedidos
-
 ```txt
 GET  /api/pedidos
 GET  /api/pedidos/{id}
@@ -199,41 +353,16 @@ GET  /api/pedidos/status/{status}
 POST /api/pedidos
 ```
 
+### Health Check (CP4)
+```txt
+GET /health
+```
+
 ---
 
 ## Exemplos de Requisição
 
-### Criar Categoria
-
-```http
-POST /api/categorias
-Content-Type: application/json
-```
-
-```json
-{
-  "nome": "Camisetas",
-  "descricao": "Categoria de camisetas masculinas e femininas"
-}
-```
-
-### Criar Marca
-
-```http
-POST /api/marcas
-Content-Type: application/json
-```
-
-```json
-{
-  "nome": "Nike",
-  "descricao": "Marca de roupas e acessórios esportivos"
-}
-```
-
-### Criar Produto
-
-Antes de criar um produto, crie uma marca e uma categoria e use os respectivos IDs retornados.
+### Criar Produto (`POST /api/produtos` — v2, sujeito ao Rate Limit)
 
 ```http
 POST /api/produtos
@@ -242,468 +371,92 @@ Content-Type: application/json
 
 ```json
 {
-  "marcaId": "ID_DA_MARCA",
-  "categoriaId": "ID_DA_CATEGORIA",
-  "nome": "Camiseta Básica",
-  "descricao": "Camiseta de algodão",
-  "preco": 79.90,
-  "tamanho": "M",
-  "cor": "Preta"
-}
-```
-
-### Criar Cliente
-
-```http
-POST /api/clientes
-Content-Type: application/json
-```
-
-```json
-{
-  "nome": "Maria Silva",
-  "cpf": "12345678901",
-  "email": "maria@email.com",
-  "telefone": "11999999999"
-}
-```
-
-### Criar Pedido
-
-Antes de criar um pedido, já deve existir um cliente e um endereço no banco.
-
-```http
-POST /api/pedidos
-Content-Type: application/json
-```
-
-```json
-{
-  "clienteId": "ID_DO_CLIENTE",
-  "enderecoEntregaId": "ID_DO_ENDERECO",
-  "status": "Criado",
-  "valorTotal": 199.90,
-  "dataPedido": "2026-05-24T12:00:00Z"
+  "marcaId": "8f6c483a-4a25-4c07-b648-52fb58f69188",
+  "categoriaId": "2c92e92c-0e78-4bf8-b996-ebdeffb35e07",
+  "nome": "Camiseta Básica Oversized",
+  "descricao": "Camiseta 100% algodão fio 30.1 penteado",
+  "preco": 89.90,
+  "tamanho": "G",
+  "cor": "Off-White"
 }
 ```
 
 ---
 
-## DTOs
+## Tratamento Global de Exceções (RFC 7807)
 
-A API não expõe entidades de domínio diretamente nos endpoints.
-
-Foram criados DTOs de request e response na camada **Application**:
-
-```txt
-ClothingStore.Application/DTOs/Categorias
-ClothingStore.Application/DTOs/Marcas
-ClothingStore.Application/DTOs/Produtos
-ClothingStore.Application/DTOs/Clientes
-ClothingStore.Application/DTOs/Pedidos
-```
-
-Exemplo:
-
-```txt
-CategoriaRequest
-CategoriaResponse
-ProdutoRequest
-ProdutoResponse
-ClienteRequest
-ClienteResponse
-PedidoRequest
-PedidoResponse
-ItemPedidoResponse
-```
-
----
-
-## Repositório Genérico
-
-O CP3 solicita um contrato genérico de acesso a dados. O projeto implementa:
-
-```txt
-ClothingStore.Application/Interfaces/Repositories/IRepository.cs
-ClothingStore.Infrastructure/Persistence/Repositories/Repository.cs
-```
-
-O contrato possui operações comuns:
-
-```txt
-GetAllAsync
-GetByIdAsync
-AddAsync
-Update
-Remove
-ExistsAsync
-```
-
-Registro no `Program.cs`:
-
-```csharp
-builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-```
-
-O contrato continua disponível para os fluxos que precisam de operações genéricas. No CP4, a criação de produtos foi movida para `ProdutoService`, que recebe as interfaces de repositório pela Application, mantendo o controller focado na camada HTTP.
-
-Os repositórios específicos continuam existindo para consultas mais próprias do domínio:
-
-```txt
-IClienteRepository
-IProdutoRepository
-IPedidoRepository
-```
-
----
-
-## Swagger / OpenAPI
-
-O Swagger foi configurado no `Program.cs` com:
-
-- `AddEndpointsApiExplorer()`;
-- `AddSwaggerGen()`;
-- metadados da API: título, versão e descrição;
-- `IncludeXmlComments()`;
-- `UseSwagger()`;
-- `UseSwaggerUI()`.
-
-O projeto `ClothingStore.API.csproj` habilita a geração de XML comments:
-
-```xml
-<GenerateDocumentationFile>true</GenerateDocumentationFile>
-```
-
-As actions dos controllers possuem comentários XML e atributos como:
-
-```csharp
-[ProducesResponseType(typeof(CategoriaResponse), StatusCodes.Status200OK)]
-[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-```
-
----
-
-## Tratamento Global de Exceções
-
-O projeto possui um handler global em:
-
-```txt
-ClothingStore.API/Exceptions/GlobalExceptionHandler.cs
-```
-
-Ele implementa `IExceptionHandler` e retorna erros no padrão **RFC 7807** usando `ProblemDetails` com o content type:
-
-```txt
-application/problem+json
-```
-
-Registro no `Program.cs`:
-
-```csharp
-builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
-builder.Services.AddProblemDetails();
-app.UseExceptionHandler();
-```
-
-### Mapeamento de Exceções
+O `GlobalExceptionHandler` intercepta exceções não tratadas e formata a resposta no padrão `application/problem+json`:
 
 | Exceção | Status HTTP | Motivo |
 |---|---:|---|
-| `ArgumentException` | 400 | Erro de validação ou argumento inválido. |
-| `DomainException` | 400 | Erro de regra de domínio. |
-| `ResourceNotFoundException` | 404 | Recurso não encontrado. |
-| `KeyNotFoundException` | 404 | Recurso não encontrado. |
-| `ConflictException` | 409 | Conflito de dados, como CPF ou e-mail duplicado. |
-| Demais exceções | 500 | Erro interno genérico, sem expor detalhes em produção. |
-
-Exemplos de retorno estão em:
-
-```txt
-docs/cp3-testes.md
-```
+| `ArgumentException` | 400 | Erro de validação ou argumento inválido |
+| `DomainException` | 400 | Violação de regra de negócio no domínio |
+| `ResourceNotFoundException` | 404 | Recurso não encontrado por ID |
+| `KeyNotFoundException` | 404 | Chave não encontrada |
+| `ConflictException` | 409 | Conflito de unicidade (ex: CPF/e-mail já cadastrado) |
+| Demais exceções | 500 | Erro interno não previsto (detalhes ocultos em produção) |
 
 ---
 
+## Testes Automatizados
 
----
+A solução conta com duas suítes de testes unitários automatizados (xUnit + Moq):
 
-# CP4 — Health Checks, Observabilidade e Testes
+1. **`ClothingStore.Domain.Tests`**:
+   - Validação da entidade `Produto` (criação válida com `[Fact]`, preço inválido/negativo com `[Theory]` + `[InlineData]`).
+2. **`ClothingStore.Application.Tests`**:
+   - `ProdutoServiceTests`:
+     - Criação com categoria inexistente $\rightarrow$ lança `ResourceNotFoundException` e garante `Times.Never` no repositório.
+     - Criação com dados válidos $\rightarrow$ garante `Times.Once` no repositório.
+     - `GetPagedAsync` com parâmetros inválidos (`page <= 0`, `pageSize <= 0`, `pageSize > 100`) $\rightarrow$ lança `ArgumentException` e garante `Times.Never`.
+     - `GetPagedAsync` com parâmetros válidos $\rightarrow$ retorna itens e total correto chamando `Times.Once`.
 
-O CP4 evolui a mesma solução do CP3. As migrations, o `DbContext`, os controllers, os DTOs, o `IRepository<T>` e o `GlobalExceptionHandler` foram mantidos.
+### Execução dos Testes:
 
-## 1. Health Check
-
-A API expõe **somente `GET /health`** para verificar a disponibilidade operacional.
-
-Foram registrados dois checks:
-
-| Check | Função | Status |
-|---|---|---|
-| `self` | Confirma que o processo da API está em execução. | `Healthy` |
-| `database` | Verifica a conectividade do `ClothingStoreContext` com o PostgreSQL. | `Healthy` / `Unhealthy` |
-
-A implementação segue a abordagem **A** do enunciado: `AddDbContextCheck<ClothingStoreContext>()`, usando o pacote `Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore`.
-
-A resposta de `/health` é JSON e contém:
-
-- `status` geral;
-- `duration` da execução;
-- lista de `checks`;
-- nome e status de cada check;
-- duração de cada check;
-- mensagem da exceção somente em **Development**.
-
-Os códigos HTTP são:
-
-```txt
-Healthy   -> 200
-Degraded  -> 200
-Unhealthy -> 503
-```
-
-Exemplo de chamada:
-
-```http
-GET /health
-```
-
-Exemplo de estrutura da resposta:
-
-```json
-{
-  "status": "Healthy",
-  "duration": "00:00:00.1234567",
-  "checks": [
-    {
-      "name": "self",
-      "status": "Healthy",
-      "description": "API em execução.",
-      "duration": "00:00:00.0001234",
-      "error": null
-    },
-    {
-      "name": "database",
-      "status": "Healthy",
-      "description": null,
-      "duration": "00:00:00.0987654",
-      "error": null
-    }
-  ]
-}
-```
-
-### Validação de falha do banco
-
-Com a API em execução e PostgreSQL disponível:
-
-```txt
-GET /health -> HTTP 200
-```
-
-Para simular a indisponibilidade do banco em ambiente local, pare o PostgreSQL ou configure uma connection string inválida sem commitar credenciais:
-
-```txt
-GET /health -> HTTP 503
-```
-
-O detalhe da exceção do banco não deve ser exposto em produção.
-
-A implementação foi separada em:
-
-```txt
-ClothingStore.API/Health/HealthCheckResponseWriter.cs
-ClothingStore.API/Extensions/ClothingStoreServiceCollectionExtensions.cs
-```
-
----
-
-## 2. Observabilidade e logs
-
-O projeto utiliza `ILogger<T>` nativo do ASP.NET Core.
-
-O fluxo de criação de produto (`POST /api/produtos`) possui:
-
-1. log de início da operação;
-2. log de sucesso;
-3. propriedades nomeadas;
-4. `traceId` da requisição.
-
-Exemplo conceitual do log:
-
-```txt
-Iniciando criação de produto. MarcaId CategoriaId Nome TraceId
-Produto criado com sucesso. ProdutoId TraceId
-```
-
-O `GlobalExceptionHandler` também registra exceções em nível `Error`, incluindo:
-
-```txt
-Method
-Path
-TraceId
-Exception
-```
-
-O `traceId` é incluído no `ProblemDetails.Extensions` somente em Development. Em Production, detalhes internos e stack trace não são expostos na resposta HTTP.
-
-O handler continua centralizando o mapeamento das exceções do CP3.
-
----
-
-## 3. Serviço de aplicação
-
-Para manter a responsabilidade de negócio fora do controller, o fluxo de criação de produto foi organizado na camada Application:
-
-```txt
-ClothingStore.Application
-|-- Interfaces/Services/IProdutoService.cs
-`-- Services/ProdutoService.cs
-```
-
-O `ProdutoService` recebe as interfaces de repositório por injeção de dependência e verifica:
-
-- existência da marca;
-- existência da categoria;
-- criação da entidade `Produto`;
-- persistência pelo `IProdutoRepository`.
-
-O controller permanece responsável pela camada HTTP e pelos logs da requisição.
-
-Registro na DI:
-
-```csharp
-services.AddScoped<IProdutoService, ProdutoService>();
-```
-
----
-
-## 4. Testes automatizados
-
-A solution possui dois projetos de teste:
-
-```txt
-ClothingStore.Domain.Tests
-ClothingStore.Application.Tests
-```
-
-### Domain Tests
-
-O projeto referencia **somente** `ClothingStore.Domain`.
-
-Arquivo principal:
-
-```txt
-ClothingStore.Domain.Tests/ProdutoTests.cs
-```
-
-Cobertura:
-
-- `[Fact]` para criação de produto com dados válidos;
-- `[Theory]` + `[InlineData]` para preços negativos;
-- validação da `DomainException`;
-- padrão AAA: Arrange / Act / Assert.
-
-### Application Tests
-
-O projeto referencia `ClothingStore.Application` e usa **Moq** para simular os repositórios.
-
-Arquivo principal:
-
-```txt
-ClothingStore.Application.Tests/Services/ProdutoServiceTests.cs
-```
-
-Cenários:
-
-- categoria inexistente → `ResourceNotFoundException`;
-- quando a categoria não existe, `IProdutoRepository.AddAsync` **não é chamado** (`Times.Never`);
-- criação válida → `AddAsync` chamado uma vez (`Times.Once`).
-
-Não são usados:
-
-- banco real nos testes;
-- `DbContext` nos testes de Application;
-- `WebApplicationFactory`;
-- testes de controller para substituir os testes exigidos de Domain/Application.
-
-### Executar os testes
-
-A partir da raiz da solução:
+Na raiz da solução:
 
 ```bash
 dotnet test
 ```
 
-O comando deve terminar com todos os testes passando.
-
 ---
 
-## 5. URLs
+## Evidências de Testes
 
-Com a API executando localmente:
+As evidências de execução e validação do CP5 estão documentadas em:
 
 ```txt
-Swagger:
-https://localhost:<porta>/swagger
-
-Health:
-https://localhost:<porta>/health
+docs/cp5-evidencias.md
 ```
 
-O endpoint `/health` não é um endpoint de negócio e não precisa aparecer no Swagger.
+Itens contemplados:
+1. Resposta `GET /api/produtos?api-version=1.0` (array v1) com headers `api-supported-versions` e `api-deprecated-versions`.
+2. Resposta `GET /api/produtos` (envelope v2).
+3. Resposta com paginação página 1 e página 2 demonstrando não-sobreposição.
+4. Respostas de erro HTTP 400 para `page=0` e `pageSize=9999`.
+5. Estouro do rate limit com HTTP 429, header `Retry-After: 60` e JSON de rejeição.
+6. `GET /health` respondendo HTTP 200 imediatamente após o estouro do rate limit.
+7. Prints do Swagger UI evidenciando os grupos v1.0 (deprecada) e v2.0.
+8. Execução dos testes automatizados com `dotnet test`.
 
 ---
 
-## 6. Evidências
+## Checklist de Conformidade CP5
 
-As evidências do CP4 devem ser armazenadas em:
-
-```txt
-docs/
-```
-
-O arquivo:
-
-```txt
-docs/cp4-evidencias.md
-```
-
-indica quais evidências devem ser registradas:
-
-- `/health` com API e banco saudáveis;
-- `/health` com banco indisponível;
-- log de `POST /api/produtos` contendo `traceId`;
-- exceção tratada pelo `GlobalExceptionHandler`;
-- saída do `dotnet test`.
-
----
-
-## Checklist CP4
-
-- [x] `AddHealthChecks()` registrado na API.
-- [x] Check `self` implementado.
-- [x] Check do PostgreSQL via `AddDbContextCheck<ClothingStoreContext>()`.
-- [x] `GET /health` com relatório JSON.
-- [x] `Healthy -> 200`, `Degraded -> 200`, `Unhealthy -> 503`.
-- [x] Exceção do health check exibida somente em Development.
-- [x] Logs estruturados com `ILogger<T>`.
-- [x] `traceId` no fluxo de criação de produto.
-- [x] `GlobalExceptionHandler` registra exceções com `traceId`.
-- [x] `traceId` em `ProblemDetails.Extensions` em Development.
-- [x] `ClothingStore.Domain.Tests` criado sem referência à Infrastructure/API.
-- [x] Domain com `[Fact]` e `[Theory]` + `[InlineData]`.
-- [x] `ClothingStore.Application.Tests` criado com Moq.
-- [x] Application verifica `Times.Never` no caminho de erro.
-- [x] Application verifica `Times.Once` no caminho feliz.
-- [x] `dotnet test` documentado.
-- [x] Migrations, `DbContext`, controllers, DTOs, Swagger e `GlobalExceptionHandler` do CP3 preservados.
-
----
-
-## 👥 Integrantes da Equipe
-
-| Nome | RM | Turma | GitHub | LinkedIn |
-|---|---|---|---|---|
-| **Alexander Dennis Isidro Mamani** | 565554 | 2TDSPG | [alex-isidro](https://github.com/alex-isidro) | [LinkedIn](https://www.linkedin.com/in/alexander-dennis-a3b48824b/) |
-| **Kelson Zhang** | 563748 | 2TDSPG | [KelsonZh0](https://github.com/KelsonZh0) | [LinkedIn](https://www.linkedin.com/in/kelson-zhang-211456323/) |
+- [x] Pacotes `Asp.Versioning.Mvc` e `Asp.Versioning.Mvc.ApiExplorer` instalados e configurados.
+- [x] Default API version definida como **2.0** (`AssumeDefaultVersionWhenUnspecified = true`).
+- [x] Suporte a versão via query string `api-version` e header `X-Api-Version`.
+- [x] Headers `api-supported-versions` e `api-deprecated-versions` emitidos na resposta.
+- [x] **v1 (deprecada)** entrega a listagem antiga em formato de array plano.
+- [x] **v2 (atual)** entrega o envelope paginado (`items`, `page`, `pageSize`, `totalItems`, `totalPages`, `hasPrevious`, `hasNext`).
+- [x] Mesma `ProdutoService` reutilizada entre v1 e v2 sem duplicação de regras de negócio.
+- [x] Paginação executada no banco via `IQueryable` (`Count` + `OrderBy` + `Skip` + `Take`).
+- [x] Validação de `page < 1` ou `pageSize` fora de 1–100 retornando **HTTP 400 Bad Request**.
+- [x] Página além do total retornando **HTTP 200 OK** com `items: []`.
+- [x] Rate limiting nativo configurado com Fixed Window (10 requisições / 1 minuto).
+- [x] Rejeição do rate limit com **HTTP 429 Too Many Requests**, header `Retry-After: 60` e payload JSON.
+- [x] **`GET /health`** permanece de fora do rate limit e continua respondendo HTTP 200.
+- [x] Swagger configurado com múltiplos documentos (v1 marcada como deprecada, v2 como ativa).
+- [x] Testes unitários com xUnit e Moq cobrindo domínio, aplicação e regras de paginação.
+- [x] README e documentação de evidências em `docs/cp5-evidencias.md` atualizados.
+- [x] Arquitetura Clean Architecture e entregas dos CPs 1, 2, 3 e 4 preservadas.

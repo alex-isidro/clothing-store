@@ -88,4 +88,53 @@ public class ProdutoServiceTests
             r => r.AddAsync(It.IsAny<Produto>(), It.IsAny<CancellationToken>()),
             Times.Once);
     }
+
+    [Theory]
+    [InlineData(0, 20)]
+    [InlineData(1, 0)]
+    [InlineData(1, 101)]
+    public async Task GetPaged_ComParametrosInvalidos_DeveLancarArgumentException(
+        int page,
+        int pageSize)
+    {
+        var act = () => _service.GetPagedAsync(page, pageSize);
+
+        
+        await Assert.ThrowsAsync<ArgumentException>(act);
+        _produtoRepository.Verify(
+            r => r.GetPagedAsync(
+                It.IsAny<int>(),
+                It.IsAny<int>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task GetPaged_ComParametrosValidos_DeveRetornarItensETotal()
+    {
+        var produto = new Produto(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "Camiseta Básica",
+            "Camiseta de algodão",
+            79.90m,
+            "M",
+            "Preta");
+
+        IReadOnlyList<Produto> items = new List<Produto> { produto };
+
+        _produtoRepository
+            .Setup(r => r.GetPagedAsync(2, 2, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((items, 3));
+
+        
+        var (resultItems, totalItems) = await _service.GetPagedAsync(2, 2);
+
+        Assert.Single(resultItems);
+        Assert.Equal(3, totalItems);
+        _produtoRepository.Verify(
+            r => r.GetPagedAsync(2, 2, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
 }

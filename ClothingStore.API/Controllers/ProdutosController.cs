@@ -1,107 +1,110 @@
+using Asp.Versioning;
+using ClothingStore.Application.DTOs;
 using ClothingStore.Application.DTOs.Produtos;
-using ClothingStore.Application.Interfaces.Repositories;
 using ClothingStore.Application.Interfaces.Services;
-using ClothingStore.Domain.Entities;
 using ClothingStore.Domain.Exceptions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace ClothingStore.API.Controllers;
 
-/// <summary>
-/// Endpoints para gerenciamento de produtos da loja.
-/// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[ApiVersion("1.0", Deprecated = true)]
+[ApiVersion("2.0")]
+[Route("api/produtos")]
 [Produces("application/json")]
-public class ProdutosController : ControllerBase
+public class ProdutosController(
+    IProdutoService service,
+    ILogger<ProdutosController> logger) : ControllerBase
 {
-    private readonly IProdutoRepository _produtoRepository;
-    private readonly IProdutoService _service;
-    private readonly ILogger<ProdutosController> _logger;
-
-    public ProdutosController(
-        IProdutoRepository produtoRepository,
-        IProdutoService service,
-        ILogger<ProdutosController> logger)
-    {
-        _produtoRepository = produtoRepository;
-        _service = service;
-        _logger = logger;
-    }
-
     /// <summary>
-    /// Lista todos os produtos cadastrados.
+    /// Lista produtos usando o contrato antigo. Esta versão está deprecada.
     /// </summary>
-    /// <param name="cancellationToken">Token para cancelamento da requisição.</param>
-    /// <returns>Lista de produtos.</returns>
     [HttpGet]
+    [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(IEnumerable<ProdutoResponse>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<IEnumerable<ProdutoResponse>>> GetAll(CancellationToken cancellationToken)
+    public async Task<ActionResult<IEnumerable<ProdutoResponse>>> GetAllV1(
+        CancellationToken cancellationToken)
     {
-        var produtos = await _produtoRepository.GetAllAsync(cancellationToken);
-        var response = produtos.Select(ProdutoResponse.FromEntity);
-
-        return Ok(response);
+        var produtos = await service.GetAllAsync(cancellationToken);
+        return Ok(produtos);
     }
 
     /// <summary>
-    /// Busca um produto pelo identificador.
+    /// Lista produtos paginados usando o contrato v2.
     /// </summary>
-    /// <param name="id">Identificador do produto.</param>
-    /// <param name="cancellationToken">Token para cancelamento da requisição.</param>
-    /// <returns>Produto encontrado.</returns>
+    [HttpGet]
+    [MapToApiVersion("2.0")]
+    [ProducesResponseType(typeof(PagedResponse<ProdutoResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<PagedResponse<ProdutoResponse>>> GetAllV2(
+        [FromQuery] PaginationQuery pagination,
+        CancellationToken cancellationToken)
+    {
+        if (pagination.TryGetError(out var message))
+            return BadRequest(new ProblemDetails
+            {
+                Status = StatusCodes.Status400BadRequest,
+                Title = "Parâmetros de paginação inválidos",
+                Detail = message
+            });
+
+        var (items, totalItems) = await service.GetPagedAsync(
+            pagination.Page,
+            pagination.PageSize,
+            cancellationToken);
+
+        return Ok(new PagedResponse<ProdutoResponse>(
+            items,
+            pagination.Page,
+            pagination.PageSize,
+            totalItems));
+    }
+
+    /// <summary>
+    /// Busca um produto por ID. Disponível nas versões 1.0 e 2.0.
+    /// </summary>
     [HttpGet("{id:guid}")]
+    [MapToApiVersion("1.0")]
+    [MapToApiVersion("2.0")]
     [ProducesResponseType(typeof(ProdutoResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<ProdutoResponse>> GetById(Guid id, CancellationToken cancellationToken)
+    public async Task<ActionResult<ProdutoResponse>> GetById(
+        Guid id,
+        CancellationToken cancellationToken)
     {
-        var produto = await _produtoRepository.GetByIdAsync(id, cancellationToken)
+        var produto = await service.GetByIdAsync(id, cancellationToken)
             ?? throw new ResourceNotFoundException("Produto", id);
 
-        return Ok(ProdutoResponse.FromEntity(produto));
+        return Ok(produto);
     }
 
     /// <summary>
-    /// Cria um novo produto vinculado a uma marca e a uma categoria existentes.
+    /// Cria um novo produto. O endpoint continua disponível na v2.
     /// </summary>
-    /// <remarks>
-    /// Exemplo de requisição:
-    ///
-    ///     POST /api/produtos
-    ///     {
-    ///       "marcaId": "11111111-1111-1111-1111-111111111111",
-    ///       "categoriaId": "22222222-2222-2222-2222-222222222222",
-    ///       "nome": "Camiseta Básica",
-    ///       "descricao": "Camiseta de algodão",
-    ///       "preco": 79.90,
-    ///       "tamanho": "M",
-    ///       "cor": "Preta"
-    ///     }
-    /// </remarks>
-    /// <param name="request">Dados do produto.</param>
-    /// <param name="cancellationToken">Token para cancelamento da requisição.</param>
-    /// <returns>Produto criado.</returns>
     [HttpPost]
+    [MapToApiVersion("2.0")]
+    [EnableRateLimiting("produtos-write")]
     [ProducesResponseType(typeof(ProdutoResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<ProdutoResponse>> Create([FromBody] ProdutoRequest request, CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status429TooManyRequests)]
+    public async Task<ActionResult<ProdutoResponse>> Create(
+        [FromBody] ProdutoRequest request,
+        CancellationToken cancellationToken)
     {
         var traceId = HttpContext.TraceIdentifier;
 
-        _logger.LogInformation(
+        logger.LogInformation(
             "Iniciando criação de produto. {MarcaId} {CategoriaId} {Nome} {TraceId}",
             request.MarcaId,
             request.CategoriaId,
             request.Nome,
             traceId);
 
-        var response = await _service.CreateAsync(request, cancellationToken);
+        var response = await service.CreateAsync(request, cancellationToken);
 
-        _logger.LogInformation(
+        logger.LogInformation(
             "Produto criado com sucesso. {ProdutoId} {TraceId}",
             response.Id,
             traceId);
